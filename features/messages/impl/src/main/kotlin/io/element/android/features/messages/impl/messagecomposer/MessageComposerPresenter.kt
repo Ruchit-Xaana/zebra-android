@@ -34,6 +34,7 @@ import io.element.android.features.messages.impl.draft.ComposerDraftService
 import io.element.android.features.messages.impl.messagecomposer.suggestions.SuggestionsProcessor
 import io.element.android.features.messages.impl.timeline.TimelineController
 import io.element.android.features.messages.impl.utils.TextPillificationHelper
+import io.element.android.features.messages.impl.voicemessages.VoiceMessageException
 import io.element.android.libraries.architecture.Presenter
 import io.element.android.libraries.designsystem.utils.snackbar.SnackbarDispatcher
 import io.element.android.libraries.designsystem.utils.snackbar.SnackbarMessage
@@ -70,6 +71,8 @@ import io.element.android.libraries.textcomposer.model.MessageComposerMode
 import io.element.android.libraries.textcomposer.model.Suggestion
 import io.element.android.libraries.textcomposer.model.TextEditorState
 import io.element.android.libraries.textcomposer.model.rememberMarkdownTextEditorState
+import io.element.android.libraries.voicerecorder.api.SpeechRecognitionListener
+import io.element.android.libraries.voicerecorder.impl.DefaultAudioRecorder
 import io.element.android.services.analytics.api.AnalyticsService
 import io.element.android.services.analyticsproviders.api.trackers.captureInteraction
 import io.element.android.wysiwyg.compose.RichTextEditorState
@@ -118,8 +121,10 @@ class MessageComposerPresenter @Inject constructor(
     private val pillificationHelper: TextPillificationHelper,
     private val roomMemberProfilesCache: RoomMemberProfilesCache,
     private val suggestionsProcessor: SuggestionsProcessor,
+    private val audioRecorder: DefaultAudioRecorder,
 ) : Presenter<MessageComposerState> {
     private val cameraPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.CAMERA)
+    private val micPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.RECORD_AUDIO)
     private var pendingEvent: MessageComposerEvents? = null
     private val suggestionSearchTrigger = MutableStateFlow<Suggestion?>(null)
 
@@ -149,6 +154,7 @@ class MessageComposerPresenter @Inject constructor(
         }
 
         val cameraPermissionState = cameraPermissionPresenter.present()
+        val micPermissionState = micPermissionPresenter.present()
         val attachmentsState = remember {
             mutableStateOf<AttachmentsState>(AttachmentsState.None)
         }
@@ -392,6 +398,28 @@ class MessageComposerPresenter @Inject constructor(
                     val draft = createDraftFromState(markdownTextEditorState, richTextEditorState)
                     appCoroutineScope.updateDraft(draft, isVolatile = false)
                 }
+                MessageComposerEvents.AudioCapture.Start -> {
+                    Timber.v("Audio capture record button pressed")
+                    val permissionGranted=micPermissionState.permissionGranted
+                    when {
+                        permissionGranted -> {
+                            localCoroutineScope.startRecording(object : SpeechRecognitionListener {
+                                override fun onTextRecognized(recognizedText: String) {
+                                    showAttachmentSourcePicker = false
+                                    markdownTextEditorState.text.update(recognizedText, true)
+                                }
+                                override fun onError(error: Int) {
+                                    showAttachmentSourcePicker = false
+                                    markdownTextEditorState.text.update("Error converting speech to text : Code ${error}", true)
+                                }
+                            })
+                        }
+                        else -> {
+                            Timber.i("Microphone permission needed")
+                            micPermissionState.eventSink(PermissionsEvents.RequestPermissions)
+                        }
+                    }
+                }
             }
         }
 
@@ -484,6 +512,28 @@ class MessageComposerPresenter @Inject constructor(
                     attachmentState = attachmentState,
                 )
             }
+        }
+    }
+
+    private fun CoroutineScope.startRecording(callback: SpeechRecognitionListener) = launch {
+        try {
+            audioRecorder.startRecording(object : SpeechRecognitionListener {
+                override fun onTextRecognized(recognizedText: String) {
+                    // Handle the recognized text here
+                    callback.onTextRecognized(recognizedText)
+                    audioRecorder.stopRecording()
+                }
+
+                override fun onError(error: Int) {
+                    // Handle error here
+                    callback.onError(error)
+                    Timber.e("Speech recognition error: $error")
+                    audioRecorder.stopRecording()
+                }
+            })
+        } catch (e: SecurityException) {
+            Timber.e(e, "Audio Capture error")
+            analyticsService.trackError(VoiceMessageException.PermissionMissing("Expected permission to record but none", e))
         }
     }
 
