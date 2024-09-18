@@ -8,7 +8,7 @@
 package io.element.android.appconfig
 
 object AuthenticationConfig {
-    const val MATRIX_ORG_URL = "https://dev-server.securezebra.com/"
+    const val MATRIX_ORG_URL = "https://dev-server.securezebra.com"
 
     /**
      * Default homeserver url to sign in with, unless the user selects a different one.

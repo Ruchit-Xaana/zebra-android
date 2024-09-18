@@ -85,9 +85,12 @@ class DefaultAppPreferencesStore @Inject constructor(
         }
     }
 
+    /**
+     * By default set simplified sliding sync to false as our server uses proxy.
+     */
     override fun isSimplifiedSlidingSyncEnabledFlow(): Flow<Boolean> {
         return store.data.map { prefs ->
-            prefs[simplifiedSlidingSyncKey] ?: true
+            prefs[simplifiedSlidingSyncKey] ?: false
         }
     }
 

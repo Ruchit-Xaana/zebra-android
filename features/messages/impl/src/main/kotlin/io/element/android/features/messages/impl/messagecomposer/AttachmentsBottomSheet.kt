@@ -27,6 +27,7 @@ import io.element.android.compound.tokens.generated.CompoundIcons
 import io.element.android.features.messages.impl.R
 import io.element.android.libraries.androidutils.ui.hideKeyboard
 import io.element.android.libraries.designsystem.components.list.ListItemContent
+import io.element.android.libraries.designsystem.icons.ZebraIcons
 import io.element.android.libraries.designsystem.preview.ElementPreview
 import io.element.android.libraries.designsystem.preview.PreviewsDayNight
 import io.element.android.libraries.designsystem.theme.components.IconSource
@@ -97,6 +98,12 @@ private fun AttachmentSourcePickerMenu(
             .navigationBarsPadding()
             .imePadding()
     ) {
+        ListItem(
+            modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.AudioCapture.Start) },
+            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.AudioCapture())),
+            headlineContent = { Text(stringResource(R.string.screen_room_action_audio_capture_stt)) },
+            style = ListItemStyle.Primary,
+        )
         ListItem(
             modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.PickAttachmentSource.PhotoFromCamera) },
             leadingContent = ListItemContent.Icon(IconSource.Vector(CompoundIcons.TakePhoto())),

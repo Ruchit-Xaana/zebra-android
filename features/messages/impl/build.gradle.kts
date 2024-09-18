@@ -25,6 +25,7 @@ anvil {
 }
 
 dependencies {
+    implementation(projects.libraries.voicerecorder.impl)
     implementation(projects.anvilannotations)
     anvil(projects.anvilcodegen)
     api(projects.features.messages.api)

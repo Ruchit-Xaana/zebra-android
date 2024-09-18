@@ -37,4 +37,7 @@ sealed interface MessageComposerEvents {
     data class SuggestionReceived(val suggestion: Suggestion?) : MessageComposerEvents
     data class InsertSuggestion(val resolvedSuggestion: ResolvedSuggestion) : MessageComposerEvents
     data object SaveDraft : MessageComposerEvents
+    sealed interface AudioCapture : MessageComposerEvents {
+        data object Start : AudioCapture
+    }
 }
