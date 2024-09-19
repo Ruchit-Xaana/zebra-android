@@ -54,6 +54,8 @@ internal fun TimelineItemRow(
     eventContentView: @Composable (TimelineItem.Event, Modifier, (ContentAvoidingLayoutData) -> Unit) -> Unit =
         { event, contentModifier, onContentLayoutChange ->
             TimelineItemEventContentView(
+                roomId=timelineRoomInfo.roomId,
+                eventId = event.eventId?.value,
                 content = event.content,
                 onLinkClick = onLinkClick,
                 eventSink = eventSink,

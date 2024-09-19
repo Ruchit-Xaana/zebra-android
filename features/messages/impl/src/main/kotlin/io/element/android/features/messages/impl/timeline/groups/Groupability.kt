@@ -10,6 +10,7 @@ package io.element.android.features.messages.impl.timeline.groups
 import io.element.android.features.messages.impl.timeline.model.TimelineItem
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemAudioContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemCallNotifyContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEncryptedContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemImageContent
@@ -25,6 +26,7 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemUnknownContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVoiceContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWeatherContent
 import io.element.android.libraries.matrix.api.timeline.MatrixTimelineItem
 import io.element.android.libraries.matrix.api.timeline.item.event.CallNotifyContent
 import io.element.android.libraries.matrix.api.timeline.item.event.FailedToParseMessageLikeContent
@@ -48,6 +50,8 @@ import io.element.android.libraries.matrix.api.timeline.item.event.UnknownConten
 internal fun TimelineItem.Event.canBeGrouped(): Boolean {
     return when (content) {
         is TimelineItemTextBasedContent,
+        is TimelineItemWeatherContent,
+        is TimelineItemEmptyMessageContent,
         is TimelineItemEncryptedContent,
         is TimelineItemImageContent,
         is TimelineItemStickerContent,

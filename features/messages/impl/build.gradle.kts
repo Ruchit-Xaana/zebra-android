@@ -7,6 +7,7 @@
 
 plugins {
     id("io.element.android-compose-library")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.25"
     alias(libs.plugins.anvil)
     id("kotlin-parcelize")
 }
@@ -26,6 +27,7 @@ anvil {
 
 dependencies {
     implementation(projects.libraries.voicerecorder.impl)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(projects.anvilannotations)
     anvil(projects.anvilcodegen)
     api(projects.features.messages.api)
@@ -68,6 +70,9 @@ dependencies {
     implementation(libs.vanniktech.blurhash)
     implementation(libs.telephoto.zoomableimage)
     implementation(libs.matrix.emojibase.bindings)
+    implementation(libs.gson)
+    implementation(libs.serialization.json)
+    implementation(libs.coil.compose.v240)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.coroutines.test)

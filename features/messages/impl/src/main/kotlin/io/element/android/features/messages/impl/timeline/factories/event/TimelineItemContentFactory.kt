@@ -45,11 +45,13 @@ class TimelineItemContentFactory @Inject constructor(
             is FailedToParseMessageLikeContent -> failedToParseMessageFactory.create(itemContent)
             is FailedToParseStateContent -> failedToParseStateFactory.create(itemContent)
             is MessageContent -> {
+                val debugInfo = eventTimelineItem.debugInfo
                 val senderDisambiguatedDisplayName = eventTimelineItem.senderProfile.getDisambiguatedDisplayName(eventTimelineItem.sender)
                 messageFactory.create(
                     content = itemContent,
                     senderDisambiguatedDisplayName = senderDisambiguatedDisplayName,
                     eventId = eventTimelineItem.eventId,
+                    debugInfo=debugInfo,
                 )
             }
             is ProfileChangeContent -> profileChangeFactory.create(eventTimelineItem)

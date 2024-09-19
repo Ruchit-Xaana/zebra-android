@@ -58,6 +58,9 @@ val SemanticColors.messageFromOtherBackground
         Color(0xFF26282D)
     }
 
+val SemanticColors.weatherResponseBackground
+    get() = Color(0xFF374151)
+
 // This color is not present in Semantic color, so put hard-coded value for now
 val SemanticColors.progressIndicatorTrackColor
     get() = if (isLight) {

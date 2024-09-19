@@ -16,8 +16,10 @@ import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
 import io.element.android.features.location.api.Location
 import io.element.android.features.messages.api.timeline.HtmlConverterProvider
+import io.element.android.features.messages.impl.timeline.components.event.widget.WeatherData
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemAudioContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmoteContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEventContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemImageContent
@@ -27,6 +29,7 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemTextContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVoiceContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWeatherContent
 import io.element.android.features.messages.impl.utils.TextPillificationHelper
 import io.element.android.libraries.androidutils.filesize.FileSizeFormatter
 import io.element.android.libraries.core.mimetype.MimeTypes
@@ -34,6 +37,7 @@ import io.element.android.libraries.featureflag.api.FeatureFlagService
 import io.element.android.libraries.featureflag.api.FeatureFlags
 import io.element.android.libraries.matrix.api.core.EventId
 import io.element.android.libraries.matrix.api.permalink.PermalinkParser
+import io.element.android.libraries.matrix.api.timeline.item.TimelineItemDebugInfo
 import io.element.android.libraries.matrix.api.timeline.item.event.AudioMessageType
 import io.element.android.libraries.matrix.api.timeline.item.event.EmoteMessageType
 import io.element.android.libraries.matrix.api.timeline.item.event.FileMessageType
@@ -52,6 +56,12 @@ import io.element.android.libraries.matrix.ui.messages.toHtmlDocument
 import io.element.android.libraries.mediaviewer.api.util.FileExtensionExtractor
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.jsoup.SerializationException
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.time.Duration
 
@@ -67,6 +77,7 @@ class TimelineItemContentMessageFactory @Inject constructor(
         content: MessageContent,
         senderDisambiguatedDisplayName: String,
         eventId: EventId?,
+        debugInfo: TimelineItemDebugInfo
     ): TimelineItemEventContent {
         return when (val messageType = content.type) {
             is EmoteMessageType -> {
@@ -197,13 +208,7 @@ class TimelineItemContentMessageFactory @Inject constructor(
                 )
             }
             is NoticeMessageType -> {
-                val body = messageType.body.trimEnd()
-                TimelineItemNoticeContent(
-                    body = body,
-                    htmlDocument = messageType.formatted?.toHtmlDocument(permalinkParser = permalinkParser),
-                    formattedBody = parseHtml(messageType.formatted) ?: body.withLinks(),
-                    isEdited = content.isEdited,
-                )
+                return createNoticeContent(content,debugInfo)
             }
             is TextMessageType -> {
                 val body = messageType.body.trimEnd()
@@ -227,6 +232,66 @@ class TimelineItemContentMessageFactory @Inject constructor(
             }
         }
     }
+
+    private fun createNoticeContent(content: MessageContent, debugInfo: TimelineItemDebugInfo): TimelineItemEventContent {
+        val messageType=content.type as NoticeMessageType
+        val resJson=debugInfo.latestEditedJson?:debugInfo.originalJson
+        val body=messageType.body
+        if(resJson!=null){
+            val resObject= Json.decodeFromString<JsonObject>(resJson)
+            val keysToCheck = listOf("weather","questionId")
+            when {
+                keysToCheck.any { (resObject["content"] as? JsonObject)?.containsKey(it) == true } -> {
+                    val contentObject = resObject["content"] as JsonObject
+                    val existingKey = keysToCheck.firstOrNull { (resObject["content"] as? JsonObject)?.containsKey(it) == true }
+                    when (existingKey) {
+                        "weather" -> {
+                            return TimelineItemWeatherContent(
+                                body = body,
+                                formattedBody = parseWeatherData(contentObject["weather"].toString()),
+                            )
+                        }
+                        "questionId" -> {
+                            if(body==""){
+                                return TimelineItemEmptyMessageContent(
+                                    body = body,
+                                    contentInfo=contentObject
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return TimelineItemNoticeContent(
+            body = body,
+            htmlDocument = messageType.formatted?.toHtmlDocument(permalinkParser = permalinkParser),
+            formattedBody = parseHtml(messageType.formatted) ?: body.withLinks(),
+            isEdited = content.isEdited,
+        )
+
+    }
+
+    private fun parseWeatherData(data:String?): WeatherData? {
+            if (data == null) {
+                Timber.e("Error null weather data")
+                return null
+            }
+            return try {
+                // First, parse the outer JSON to get the inner JSON string
+                val outerElement: JsonElement = Json.parseToJsonElement(data)
+                val innerJsonString = outerElement.jsonPrimitive.content
+
+                // Now parse the inner JSON string into WeatherData
+                val json = Json {
+                    ignoreUnknownKeys = true // This flag ignores unknown keys
+                }
+                json.decodeFromString<WeatherData>(innerJsonString)
+            } catch (e: SerializationException) {
+                Timber.e("Error parsing weather data: ${e.message}")
+                null
+            }
+        }
 
     private fun aspectRatioOf(width: Long?, height: Long?): Float? {
         val result = if (height != null && width != null) {
