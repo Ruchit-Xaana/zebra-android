@@ -69,12 +69,11 @@ class ConfirmAccountProviderNode @AssistedInject constructor(
         val context = LocalContext.current
         ConfirmAccountProviderView(
             state = state,
-            modifier = modifier,
             onOidcDetails = ::onOidcDetails,
             onNeedLoginPassword = ::onLoginPasswordNeeded,
-            onCreateAccountContinue = ::onCreateAccountContinue,
-            onChange = ::onChangeAccountProvider,
             onLearnMoreClick = { openLearnMorePage(context) },
+            onCreateAccountContinue = ::onCreateAccountContinue,
+            modifier = modifier,
         )
     }
 }

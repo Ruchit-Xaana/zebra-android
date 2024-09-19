@@ -100,6 +100,7 @@
   <string name="action_send">"Send"</string>
   <string name="action_send_message">"Send message"</string>
   <string name="action_share">"Share"</string>
+  <string name="action_sign_in">"Sign in"</string>
   <string name="action_share_link">"Share link"</string>
   <string name="action_sign_in_again">"Sign in again"</string>
   <string name="action_signout">"Sign out"</string>

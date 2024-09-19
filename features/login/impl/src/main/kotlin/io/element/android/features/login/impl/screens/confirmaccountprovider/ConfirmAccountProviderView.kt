@@ -31,7 +31,6 @@ import io.element.android.libraries.designsystem.components.dialogs.ErrorDialog
 import io.element.android.libraries.designsystem.preview.ElementPreview
 import io.element.android.libraries.designsystem.preview.PreviewsDayNight
 import io.element.android.libraries.designsystem.theme.components.Button
-import io.element.android.libraries.designsystem.theme.components.TextButton
 import io.element.android.libraries.matrix.api.auth.OidcDetails
 import io.element.android.libraries.testtags.TestTags
 import io.element.android.libraries.testtags.testTag
@@ -44,7 +43,6 @@ fun ConfirmAccountProviderView(
     onNeedLoginPassword: () -> Unit,
     onLearnMoreClick: () -> Unit,
     onCreateAccountContinue: (url: String) -> Unit,
-    onChange: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isLoading by remember(state.loginFlow) {
@@ -87,14 +85,6 @@ fun ConfirmAccountProviderView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(TestTags.loginContinue)
-                )
-                TextButton(
-                    text = stringResource(id = R.string.screen_account_provider_change),
-                    onClick = onChange,
-                    enabled = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag(TestTags.loginChangeServer)
                 )
             }
         }
@@ -153,8 +143,7 @@ internal fun ConfirmAccountProviderViewPreview(
         state = state,
         onOidcDetails = {},
         onNeedLoginPassword = {},
-        onCreateAccountContinue = {},
         onLearnMoreClick = {},
-        onChange = {},
+        onCreateAccountContinue = {},
     )
 }
