@@ -50,7 +50,7 @@ fun OnBoardingPage(
         Image(
             modifier = Modifier
                 .fillMaxSize(),
-            painter = painterResource(id = R.drawable.onboarding_bg),
+            painter = painterResource(id = R.drawable.onboarding_bg_new),
             contentScale = ContentScale.Crop,
             contentDescription = null,
         )

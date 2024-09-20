@@ -58,6 +58,33 @@ val SemanticColors.messageFromOtherBackground
         Color(0xFF26282D)
     }
 
+val SemanticColors.weatherResponseBackground
+    get() = Color(0xFF374151)
+
+val SemanticColors.whiteText
+    get() = Color(0xFFF0F2F5)
+
+val SemanticColors.transparent
+    get() = Color(0x00FFFFFF)
+
+val SemanticColors.focusedContainerColor
+    get() = if (isLight) {
+        // We want LightDesignTokens.colorGray300
+        Color(0xFFE8F0FE)
+    } else {
+        // We want DarkDesignTokens.colorGray400
+        Color(0xFF26282D)
+    }
+
+val SemanticColors.hyperlinkColor
+    get() = if (isLight) {
+        // We want LightDesignTokens.colorGray300
+        Color(0xFF1E90FF)
+    } else {
+        // We want DarkDesignTokens.colorGray400
+        Color(0xFF00FFFF)
+    }
+
 // This color is not present in Semantic color, so put hard-coded value for now
 val SemanticColors.progressIndicatorTrackColor
     get() = if (isLight) {

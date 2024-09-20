@@ -38,6 +38,7 @@
   <string name="screen_room_timeline_reactions_show_less">"Show less"</string>
   <string name="screen_room_timeline_reactions_show_more">"Show more"</string>
   <string name="screen_room_timeline_read_marker_title">"New"</string>
+  <string name="event_timeline_weather_error">Error loading weather data</string>
   <plurals name="screen_room_timeline_state_changes">
     <item quantity="one">"%1$d room change"</item>
     <item quantity="other">"%1$d room changes"</item>

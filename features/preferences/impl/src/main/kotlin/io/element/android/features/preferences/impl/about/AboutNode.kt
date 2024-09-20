@@ -29,6 +29,7 @@ class AboutNode @AssistedInject constructor(
 ) : Node(buildContext, plugins = plugins) {
     interface Callback : Plugin {
         fun openOssLicenses()
+        fun openFaq(activity: Activity,darkTheme:Boolean)
     }
 
     private fun onElementLegalClick(
@@ -45,14 +46,13 @@ class AboutNode @AssistedInject constructor(
         val isDark = ElementTheme.isLightTheme.not()
         val state = presenter.present()
         AboutView(
-            state = state,
-            onBackClick = ::navigateUp,
-            onElementLegalClick = { elementLegal ->
-                onElementLegalClick(activity, isDark, elementLegal)
+            onFAQClick = {
+                plugins.filterIsInstance<Callback>().forEach { it.openFaq(activity,isDark) }
             },
             onOpenSourceLicensesClick = {
                 plugins.filterIsInstance<Callback>().forEach { it.openOssLicenses() }
             },
+            onBackClick = ::navigateUp,
             modifier = modifier
         )
     }

@@ -7,6 +7,7 @@
 
 package io.element.android.features.login.impl.screens.loginpassword
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +23,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -33,7 +37,9 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -62,6 +68,8 @@ import io.element.android.libraries.designsystem.theme.components.Text
 import io.element.android.libraries.designsystem.theme.components.TopAppBar
 import io.element.android.libraries.designsystem.theme.components.autofill
 import io.element.android.libraries.designsystem.theme.components.onTabOrEnterKeyFocusNext
+import io.element.android.libraries.designsystem.theme.focusedContainerColor
+import io.element.android.libraries.designsystem.theme.transparent
 import io.element.android.libraries.testtags.TestTags
 import io.element.android.libraries.testtags.testTag
 import io.element.android.libraries.ui.strings.CommonStrings
@@ -86,76 +94,94 @@ fun LoginPasswordView(
 
         state.eventSink(LoginPasswordEvents.Submit)
     }
-
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = { BackButton(onClick = onBackClick) },
-            )
-        }
-    ) { padding ->
-        val scrollState = rememberScrollState()
-
-        Column(
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        Image(
             modifier = Modifier
-                .fillMaxSize()
-                .imePadding()
-                .padding(padding)
-                .consumeWindowInsets(padding)
-                .verticalScroll(state = scrollState)
-                .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-        ) {
-            // Title
-            IconTitleSubtitleMolecule(
-                modifier = Modifier.padding(top = 20.dp, start = 16.dp, end = 16.dp),
-                iconImageVector = Icons.Filled.AccountCircle,
-                title = stringResource(
-                    id = R.string.screen_account_provider_signin_title,
-                    state.accountProvider.title
-                ),
-                subTitle = stringResource(id = R.string.screen_login_subtitle)
-            )
-            Spacer(Modifier.height(40.dp))
-            LoginForm(
-                state = state,
-                isLoading = isLoading,
-                onSubmit = ::submit
-            )
-            // Min spacing
-            Spacer(Modifier.height(24.dp))
-            // Flexible spacing to keep the submit button at the bottom
-            Spacer(modifier = Modifier.weight(1f))
-            // Submit
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-            ) {
-                ButtonColumnMolecule {
-                    Button(
-                        text = stringResource(CommonStrings.action_continue),
-                        showProgress = isLoading,
-                        onClick = ::submit,
-                        enabled = state.submitEnabled || isLoading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag(TestTags.loginContinue)
-                    )
-                    Spacer(modifier = Modifier.height(48.dp))
-                }
+                .fillMaxSize(),
+            painter = painterResource(id = io.element.android.libraries.designsystem.R.drawable.onboarding_bg_new),
+            contentScale = ContentScale.Crop,
+            contentDescription = null,
+        )
+        Scaffold(
+            modifier = modifier,
+            containerColor = ElementTheme.colors.transparent,
+            topBar = {
+                TopAppBar(
+                    title = {},
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = ElementTheme.colors.transparent),
+                    navigationIcon = { BackButton(onClick = onBackClick) },
+                )
             }
+        ) { padding ->
+            val scrollState = rememberScrollState()
 
-            if (state.loginAction is AsyncData.Failure) {
-                LoginErrorDialog(error = state.loginAction.error, onDismiss = {
-                    state.eventSink(LoginPasswordEvents.ClearError)
-                })
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .padding(padding)
+                    .consumeWindowInsets(padding)
+                    .verticalScroll(state = scrollState)
+                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
+            ) {
+                // Title
+                IconTitleSubtitleMolecule(
+                    modifier = Modifier.padding(top = 20.dp, start = 16.dp, end = 16.dp),
+                    iconImageVector = Icons.Filled.AccountCircle,
+                    title = stringResource(
+                        id = R.string.screen_account_provider_signin_title,
+                        state.accountProvider.title
+                    ),
+                    subTitle = null //Removing subTitle from the LoginPassword Screen.
+                    //subTitle = stringResource(id = R.string.screen_login_subtitle)
+
+                )
+                Spacer(Modifier.height(40.dp))
+                Box(Modifier.padding(horizontal = 16.dp)) {
+                    LoginForm(
+                        state = state,
+                        isLoading = isLoading,
+                        onSubmit = ::submit
+                    )
+                }
+                // Min spacing
+                Spacer(Modifier.height(24.dp))
+                // Flexible spacing to keep the submit button at the bottom
+                Spacer(modifier = Modifier.weight(1f))
+                // Submit
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                ) {
+                    ButtonColumnMolecule {
+                        Button(
+                            text = stringResource(CommonStrings.action_sign_in),
+                            onClick = ::submit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(TestTags.loginContinue),
+                            enabled = state.submitEnabled || isLoading,
+                            showProgress = isLoading
+                        )
+                        Spacer(modifier = Modifier.height(48.dp))
+                    }
+                }
+
+                if (state.loginAction is AsyncData.Failure) {
+                    LoginErrorDialog(error = state.loginAction.error, onDismiss = {
+                        state.eventSink(LoginPasswordEvents.ClearError)
+                    })
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun LoginForm(
     state: LoginPasswordState,
@@ -191,8 +217,14 @@ private fun LoginForm(
                         eventSink(LoginPasswordEvents.SetLogin(sanitized))
                     }
                 ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ElementTheme.colors.borderFocused,
+                focusedContainerColor = ElementTheme.colors.focusedContainerColor,
+            ),
             placeholder = {
-                Text(text = stringResource(CommonStrings.common_username))
+                Text(
+                    text = stringResource(CommonStrings.common_username),
+                )
             },
             onValueChange = {
                 val sanitized = it.sanitize()
@@ -240,6 +272,10 @@ private fun LoginForm(
                         eventSink(LoginPasswordEvents.SetPassword(sanitized))
                     }
                 ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ElementTheme.colors.borderFocused,
+                focusedContainerColor = ElementTheme.colors.focusedContainerColor,
+            ),
             onValueChange = {
                 val sanitized = it.sanitize()
                 passwordFieldState = sanitized

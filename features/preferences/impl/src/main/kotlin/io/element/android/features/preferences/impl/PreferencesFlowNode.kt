@@ -7,9 +7,13 @@
 
 package io.element.android.features.preferences.impl
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat.startActivity
 import com.bumble.appyx.core.modality.BuildContext
 import com.bumble.appyx.core.node.Node
 import com.bumble.appyx.core.plugin.Plugin
@@ -20,6 +24,7 @@ import com.bumble.appyx.navmodel.backstack.operation.push
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.element.android.anvilannotations.ContributesNode
+import io.element.android.appconfig.ZebraConfig.FAQ_URL
 import io.element.android.features.licenses.api.OpenSourceLicensesEntryPoint
 import io.element.android.features.lockscreen.api.LockScreenEntryPoint
 import io.element.android.features.logout.api.LogoutEntryPoint
@@ -34,6 +39,7 @@ import io.element.android.features.preferences.impl.notifications.NotificationSe
 import io.element.android.features.preferences.impl.notifications.edit.EditDefaultNotificationSettingNode
 import io.element.android.features.preferences.impl.root.PreferencesRootNode
 import io.element.android.features.preferences.impl.user.editprofile.EditUserProfileNode
+import io.element.android.libraries.androidutils.browser.openUrlInChromeCustomTab
 import io.element.android.libraries.architecture.BackstackView
 import io.element.android.libraries.architecture.BaseFlowNode
 import io.element.android.libraries.architecture.appyx.canPop
@@ -169,6 +175,9 @@ class PreferencesFlowNode @AssistedInject constructor(
                 val callback = object : AboutNode.Callback {
                     override fun openOssLicenses() {
                         backstack.push(NavTarget.OssLicenses)
+                    }
+                    override fun openFaq(activity: Activity,darkTheme:Boolean) {
+                        activity.openUrlInChromeCustomTab(null, darkTheme, FAQ_URL)
                     }
                 }
                 createNode<AboutNode>(buildContext, listOf(callback))

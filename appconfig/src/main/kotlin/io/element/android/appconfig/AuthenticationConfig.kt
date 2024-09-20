@@ -24,4 +24,5 @@ object AuthenticationConfig {
      * Force a sliding sync proxy url, if not null, the proxy url in the .well-known file will be ignored.
      */
     val SLIDING_SYNC_PROXY_URL: String? = null
+    const val BOT_API_URL = "https://dev-api-1.securezebra.com/_matrix/maubot/plugin/zebra"
 }
