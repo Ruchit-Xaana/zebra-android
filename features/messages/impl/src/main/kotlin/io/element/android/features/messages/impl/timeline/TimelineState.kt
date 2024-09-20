@@ -62,6 +62,7 @@ sealed interface FocusRequestState {
 
 @Immutable
 data class TimelineRoomInfo(
+    val roomId: String? = null,
     val isDm: Boolean,
     val name: String?,
     val userHasPermissionToSendMessage: Boolean,

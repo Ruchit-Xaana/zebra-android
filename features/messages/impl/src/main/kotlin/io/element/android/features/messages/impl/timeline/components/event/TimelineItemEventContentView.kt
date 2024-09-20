@@ -7,14 +7,17 @@
 
 package io.element.android.features.messages.impl.timeline.components.event
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.element.android.features.messages.impl.timeline.TimelineEvents
 import io.element.android.features.messages.impl.timeline.components.layout.ContentAvoidingLayoutData
 import io.element.android.features.messages.impl.timeline.di.LocalTimelineItemPresenterFactories
 import io.element.android.features.messages.impl.timeline.di.rememberPresenter
+import io.element.android.features.messages.impl.timeline.model.TimelineItem
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemAudioContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemCallNotifyContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEncryptedContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEventContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileContent
@@ -29,6 +32,8 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemUnknownContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVoiceContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWeatherContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWebSearchContent
 import io.element.android.features.messages.impl.voicemessages.timeline.VoiceMessageState
 import io.element.android.libraries.architecture.Presenter
 
@@ -38,8 +43,11 @@ fun TimelineItemEventContentView(
     onLinkClick: (url: String) -> Unit,
     eventSink: (TimelineEvents.EventFromTimelineItem) -> Unit,
     modifier: Modifier = Modifier,
+    roomId:String?=null,
+    eventId:String?=null,
     onContentLayoutChange: (ContentAvoidingLayoutData) -> Unit = {},
 ) {
+    Log.d("Web Search", "$content")
     val presenterFactories = LocalTimelineItemPresenterFactories.current
     when (content) {
         is TimelineItemEncryptedContent -> TimelineItemEncryptedView(
@@ -110,6 +118,28 @@ fun TimelineItemEventContentView(
                 modifier = modifier
             )
         }
+        is TimelineItemWeatherContent -> TimelineItemWeatherView(
+            content = content,
+            modifier = modifier,
+            onLinkClick = onLinkClick,
+            onContentLayoutChange = onContentLayoutChange
+        )
+        is TimelineItemEmptyMessageContent -> {
+                return TimelineItemWebSearchResultView(
+                    roomId = roomId,
+                    eventId = eventId,
+                    content = content,
+                    modifier = modifier,
+                    onLinkClick = onLinkClick,
+                    onContentLayoutChange = onContentLayoutChange
+                )
+            }
+        is TimelineItemWebSearchContent -> TimelineItemWebSearchFinalView(
+            content = content,
+            modifier = modifier,
+            onLinkClick = onLinkClick,
+            onContentLayoutChange = onContentLayoutChange
+        )
         is TimelineItemCallNotifyContent -> error("This shouldn't be rendered as the content of a bubble")
     }
 }

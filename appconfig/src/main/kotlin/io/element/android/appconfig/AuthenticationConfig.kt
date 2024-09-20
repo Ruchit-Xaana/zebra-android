@@ -8,7 +8,7 @@
 package io.element.android.appconfig
 
 object AuthenticationConfig {
-    const val MATRIX_ORG_URL = "https://matrix.org"
+    const val MATRIX_ORG_URL = "https://dev-server.securezebra.com"
 
     /**
      * Default homeserver url to sign in with, unless the user selects a different one.
@@ -24,4 +24,5 @@ object AuthenticationConfig {
      * Force a sliding sync proxy url, if not null, the proxy url in the .well-known file will be ignored.
      */
     val SLIDING_SYNC_PROXY_URL: String? = null
+    const val BOT_API_URL = "https://dev-api-1.securezebra.com/_matrix/maubot/plugin/zebra"
 }

@@ -41,6 +41,7 @@ import io.element.android.libraries.designsystem.theme.components.IconButton
 import io.element.android.libraries.designsystem.theme.components.IconSource
 import io.element.android.libraries.designsystem.theme.components.Text
 import io.element.android.libraries.designsystem.theme.components.TextButton
+import io.element.android.libraries.designsystem.theme.whiteText
 import io.element.android.libraries.testtags.TestTags
 import io.element.android.libraries.testtags.testTag
 import io.element.android.libraries.ui.strings.CommonStrings
@@ -114,7 +115,7 @@ private fun OnBoardingContent(
             ) {
                 Text(
                     text = stringResource(id = R.string.screen_onboarding_welcome_title),
-                    color = ElementTheme.materialColors.primary,
+                    color = ElementTheme.colors.whiteText,
                     style = ElementTheme.typography.fontHeadingLgBold,
                     textAlign = TextAlign.Center
                 )

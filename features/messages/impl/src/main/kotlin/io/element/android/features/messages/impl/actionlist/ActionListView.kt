@@ -55,6 +55,7 @@ import io.element.android.features.messages.impl.timeline.components.MessageShie
 import io.element.android.features.messages.impl.timeline.model.TimelineItem
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemAudioContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemCallNotifyContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEncryptedContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemImageContent
@@ -68,6 +69,8 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemUnknownContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVoiceContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWeatherContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWebSearchContent
 import io.element.android.features.messages.impl.utils.messagesummary.DefaultMessageSummaryFormatter
 import io.element.android.libraries.designsystem.components.avatar.Avatar
 import io.element.android.libraries.designsystem.components.avatar.AvatarSize
@@ -294,6 +297,15 @@ private fun MessageSummary(event: TimelineItem.Event, modifier: Modifier = Modif
         }
         is TimelineItemCallNotifyContent -> {
             content = { ContentForBody(stringResource(CommonStrings.common_call_started)) }
+        }
+        is TimelineItemWeatherContent ->{
+            content = { ContentForBody(event.content.body) }
+        }
+        is TimelineItemEmptyMessageContent ->{
+            content = { ContentForBody("Empty Message received, streaming api call sent") }
+        }
+        is TimelineItemWebSearchContent -> {
+            content = { ContentForBody(event.content.body) }
         }
     }
     Row(modifier = modifier) {
