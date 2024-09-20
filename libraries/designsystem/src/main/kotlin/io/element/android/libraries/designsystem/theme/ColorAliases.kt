@@ -76,6 +76,15 @@ val SemanticColors.focusedContainerColor
         Color(0xFF26282D)
     }
 
+val SemanticColors.hyperlinkColor
+    get() = if (isLight) {
+        // We want LightDesignTokens.colorGray300
+        Color(0xFF1E90FF)
+    } else {
+        // We want DarkDesignTokens.colorGray400
+        Color(0xFF00FFFF)
+    }
+
 // This color is not present in Semantic color, so put hard-coded value for now
 val SemanticColors.progressIndicatorTrackColor
     get() = if (isLight) {

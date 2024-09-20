@@ -14,6 +14,7 @@ import io.element.android.features.messages.impl.timeline.TimelineEvents
 import io.element.android.features.messages.impl.timeline.components.layout.ContentAvoidingLayoutData
 import io.element.android.features.messages.impl.timeline.di.LocalTimelineItemPresenterFactories
 import io.element.android.features.messages.impl.timeline.di.rememberPresenter
+import io.element.android.features.messages.impl.timeline.model.TimelineItem
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemAudioContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemCallNotifyContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
@@ -32,6 +33,7 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVoiceContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWeatherContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWebSearchContent
 import io.element.android.features.messages.impl.voicemessages.timeline.VoiceMessageState
 import io.element.android.libraries.architecture.Presenter
 
@@ -132,6 +134,12 @@ fun TimelineItemEventContentView(
                     onContentLayoutChange = onContentLayoutChange
                 )
             }
+        is TimelineItemWebSearchContent -> TimelineItemWebSearchFinalView(
+            content = content,
+            modifier = modifier,
+            onLinkClick = onLinkClick,
+            onContentLayoutChange = onContentLayoutChange
+        )
         is TimelineItemCallNotifyContent -> error("This shouldn't be rendered as the content of a bubble")
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2023, 2024 New Vector Ltd.
  *
- * SPDX-License-Identifier: AGPL-3.0-only
+ * SPD X-License-Identifier: AGPL-3.0-only
  * Please see LICENSE in the repository root for full details.
  */
 
@@ -10,6 +10,7 @@ package io.element.android.features.messages.impl.timeline.factories.event
 import android.text.Spannable
 import android.text.style.URLSpan
 import android.text.util.Linkify
+import android.util.Log
 import androidx.core.text.buildSpannedString
 import androidx.core.text.getSpans
 import androidx.core.text.toSpannable
@@ -30,6 +31,8 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVoiceContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWeatherContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWebSearchContent
+import io.element.android.features.messages.impl.timeline.model.event.WebSearchData
 import io.element.android.features.messages.impl.utils.TextPillificationHelper
 import io.element.android.libraries.androidutils.filesize.FileSizeFormatter
 import io.element.android.libraries.core.mimetype.MimeTypes
@@ -59,6 +62,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import org.jsoup.SerializationException
 import timber.log.Timber
@@ -239,7 +243,7 @@ class TimelineItemContentMessageFactory @Inject constructor(
         val body=messageType.body
         if(resJson!=null){
             val resObject= Json.decodeFromString<JsonObject>(resJson)
-            val keysToCheck = listOf("weather","questionId")
+            val keysToCheck = listOf("weather","fetching")
             when {
                 keysToCheck.any { (resObject["content"] as? JsonObject)?.containsKey(it) == true } -> {
                     val contentObject = resObject["content"] as JsonObject
@@ -251,12 +255,21 @@ class TimelineItemContentMessageFactory @Inject constructor(
                                 formattedBody = parseWeatherData(contentObject["weather"].toString()),
                             )
                         }
-                        "questionId" -> {
-                            if(body==""){
+                        "fetching" -> {
+                            if(contentObject["fetching"]?.jsonPrimitive?.content =="true"){
                                 return TimelineItemEmptyMessageContent(
                                     body = body,
                                     contentInfo=contentObject
                                 )
+                            }
+                            else{
+                                if(contentObject["fetching"]?.jsonPrimitive?.content =="false"){
+                                    return TimelineItemWebSearchContent(
+                                        body = body,
+                                        formattedBody = parseHtml(messageType.formatted) ?: body.withLinks(),
+                                        additionalData = parseWebSearchData(contentObject),
+                                    )
+                                }
                             }
                         }
                     }
@@ -292,6 +305,21 @@ class TimelineItemContentMessageFactory @Inject constructor(
                 null
             }
         }
+
+    @Suppress("LocalVariableName")
+    private fun parseWebSearchData(data: JsonObject): WebSearchData? {
+        try{
+            val raw_question = data["raw_question"]?.jsonPrimitive?.content?:"null"
+            val sources = data["sources"]?.jsonArray?.map { it.jsonPrimitive.content }
+            val prompt = data["prompt"]?.jsonArray?.map { it.jsonPrimitive.content }
+            val webSearchData = WebSearchData(raw_question = raw_question, sources = sources, prompt = prompt)
+            return webSearchData
+        }
+        catch(e:Exception){
+            Timber.e("Error parsing web search response: ${e.message}")
+            return null
+        }
+    }
 
     private fun aspectRatioOf(width: Long?, height: Long?): Float? {
         val result = if (height != null && width != null) {

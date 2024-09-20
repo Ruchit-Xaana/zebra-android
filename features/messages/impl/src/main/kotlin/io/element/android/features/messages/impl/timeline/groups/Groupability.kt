@@ -27,6 +27,7 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVoiceContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWeatherContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWebSearchContent
 import io.element.android.libraries.matrix.api.timeline.MatrixTimelineItem
 import io.element.android.libraries.matrix.api.timeline.item.event.CallNotifyContent
 import io.element.android.libraries.matrix.api.timeline.item.event.FailedToParseMessageLikeContent
@@ -52,6 +53,7 @@ internal fun TimelineItem.Event.canBeGrouped(): Boolean {
         is TimelineItemTextBasedContent,
         is TimelineItemWeatherContent,
         is TimelineItemEmptyMessageContent,
+        is TimelineItemWebSearchContent,
         is TimelineItemEncryptedContent,
         is TimelineItemImageContent,
         is TimelineItemStickerContent,

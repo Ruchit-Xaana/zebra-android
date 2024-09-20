@@ -28,6 +28,7 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVoiceContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWeatherContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWebSearchContent
 import io.element.android.libraries.di.ApplicationContext
 import io.element.android.libraries.di.RoomScope
 import io.element.android.libraries.ui.strings.CommonStrings
@@ -62,6 +63,7 @@ class DefaultMessageSummaryFormatter @Inject constructor(
             is TimelineItemLegacyCallInviteContent -> context.getString(CommonStrings.common_call_invite)
             is TimelineItemCallNotifyContent -> context.getString(CommonStrings.common_call_started)
             is TimelineItemEmptyMessageContent -> event.content.body
+            is TimelineItemWebSearchContent -> event.content.body
         }.take(MAX_SAFE_LENGTH)
     }
 }
