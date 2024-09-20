@@ -25,6 +25,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.element.android.anvilannotations.ContributesNode
 import io.element.android.appconfig.ZebraConfig.FAQ_URL
+import io.element.android.features.deactivation.api.AccountDeactivationEntryPoint
 import io.element.android.features.licenses.api.OpenSourceLicensesEntryPoint
 import io.element.android.features.lockscreen.api.LockScreenEntryPoint
 import io.element.android.features.logout.api.LogoutEntryPoint
@@ -58,6 +59,7 @@ class PreferencesFlowNode @AssistedInject constructor(
     private val notificationTroubleShootEntryPoint: NotificationTroubleShootEntryPoint,
     private val logoutEntryPoint: LogoutEntryPoint,
     private val openSourceLicensesEntryPoint: OpenSourceLicensesEntryPoint,
+    private val accountDeactivationEntryPoint: AccountDeactivationEntryPoint,
 ) : BaseFlowNode<PreferencesFlowNode.NavTarget>(
     backstack = BackStack(
         initialElement = plugins.filterIsInstance<PreferencesEntryPoint.Params>().first().initialElement.toNavTarget(),
@@ -105,6 +107,9 @@ class PreferencesFlowNode @AssistedInject constructor(
 
         @Parcelize
         data object SignOut : NavTarget
+
+        @Parcelize
+        data object AccountDeactivation : NavTarget
 
         @Parcelize
         data object OssLicenses : NavTarget
@@ -156,6 +161,10 @@ class PreferencesFlowNode @AssistedInject constructor(
 
                     override fun onSignOutClick() {
                         backstack.push(NavTarget.SignOut)
+                    }
+
+                    override fun onOpenAccountDeactivation() {
+                        backstack.push(NavTarget.AccountDeactivation)
                     }
                 }
                 createNode<PreferencesRootNode>(buildContext, plugins = listOf(callback))
@@ -244,6 +253,9 @@ class PreferencesFlowNode @AssistedInject constructor(
             }
             is NavTarget.OssLicenses -> {
                 openSourceLicensesEntryPoint.getNode(this, buildContext)
+            }
+            NavTarget.AccountDeactivation -> {
+                accountDeactivationEntryPoint.createNode(this, buildContext)
             }
         }
     }
