@@ -115,7 +115,7 @@ class PreferencesRootPresenter @Inject constructor(
             showSecureBackupBadge = showSecureBackupIndicator,
             accountManagementUrl = accountManagementUrl.value,
             devicesManagementUrl = devicesManagementUrl.value,
-            showAnalyticsSettings = buildMeta.isDebuggable,
+            showAnalyticsSettings = buildMeta.isDebuggable && hasAnalyticsProviders,
             showLogs = buildMeta.isDebuggable,
             showDeveloperSettings = showDeveloperSettings,
             canDeactivateAccount = canDeactivateAccount,

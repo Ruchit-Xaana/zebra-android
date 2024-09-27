@@ -8,12 +8,9 @@
 package io.element.android.features.preferences.impl
 
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
 import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.core.content.ContextCompat.startActivity
 import com.bumble.appyx.core.modality.BuildContext
 import com.bumble.appyx.core.node.Node
 import com.bumble.appyx.core.plugin.Plugin
@@ -131,8 +128,8 @@ class PreferencesFlowNode @AssistedInject constructor(
                         backstack.push(NavTarget.AnalyticsSettings)
                     }
 
-                    override fun onOpenAbout() {
-                        backstack.push(NavTarget.About)
+                    override fun onOpenAbout(activity: Activity,darkTheme:Boolean) {
+                        activity.openUrlInChromeCustomTab(null, darkTheme, FAQ_URL)
                     }
 
                     override fun onOpenDeveloperSettings() {

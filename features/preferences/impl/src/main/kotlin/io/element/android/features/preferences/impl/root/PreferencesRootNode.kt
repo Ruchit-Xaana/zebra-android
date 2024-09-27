@@ -37,7 +37,7 @@ class PreferencesRootNode @AssistedInject constructor(
         fun onOpenBugReport()
         fun onSecureBackupClick()
         fun onOpenAnalytics()
-        fun onOpenAbout()
+        fun onOpenAbout(activity: Activity,darkTheme:Boolean)
         fun onOpenDeveloperSettings()
         fun onOpenNotificationSettings()
         fun onOpenLockScreenSettings()
@@ -68,8 +68,8 @@ class PreferencesRootNode @AssistedInject constructor(
         plugins<Callback>().forEach { it.onOpenAnalytics() }
     }
 
-    private fun onOpenAbout() {
-        plugins<Callback>().forEach { it.onOpenAbout() }
+    private fun onOpenAbout(activity: Activity,darkTheme:Boolean) {
+        plugins<Callback>().forEach { it.onOpenAbout(activity,darkTheme) }
     }
 
     private fun onManageAccountClick(
@@ -121,7 +121,7 @@ class PreferencesRootNode @AssistedInject constructor(
             onBackClick = this::navigateUp,
             onOpenRageShake = this::onOpenBugReport,
             onOpenAnalytics = this::onOpenAnalytics,
-            onOpenAbout = this::onOpenAbout,
+            onOpenAbout = {(this::onOpenAbout)(activity,isDark)},
             onSecureBackupClick = this::onSecureBackupClick,
             onOpenDeveloperSettings = this::onOpenDeveloperSettings,
             onOpenAdvancedSettings = this::onOpenAdvancedSettings,
