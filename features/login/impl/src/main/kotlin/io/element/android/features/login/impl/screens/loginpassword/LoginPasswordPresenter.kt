@@ -36,7 +36,6 @@ class LoginPasswordPresenter @Inject constructor(
         val loginAction: MutableState<AsyncData<SessionId>> = remember {
             mutableStateOf(AsyncData.Uninitialized)
         }
-
         val formState = rememberSaveable {
             mutableStateOf(LoginFormState.Default)
         }

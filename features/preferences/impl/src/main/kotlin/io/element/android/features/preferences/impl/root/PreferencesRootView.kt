@@ -198,12 +198,12 @@ private fun ColumnScope.GeneralSection(
     onDeactivateClick: () -> Unit,
 ) {
     ListItem(
-        headlineContent = { Text(stringResource(id = CommonStrings.common_about)) },
+        headlineContent = { Text(stringResource(id = CommonStrings.common_report_a_problem)) },
         leadingContent = ListItemContent.Icon(IconSource.Vector(CompoundIcons.Info())),
         onClick = onOpenAbout,
     )
     ListItem(
-        headlineContent = { Text(stringResource(id = CommonStrings.common_report_a_problem)) },
+        headlineContent = { Text(stringResource(id = CommonStrings.common_view_logs)) },
         leadingContent = ListItemContent.Icon(IconSource.Vector(CompoundIcons.ChatProblem())),
         onClick = onOpenRageShake
     )

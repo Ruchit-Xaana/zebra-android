@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import io.element.android.features.logout.api.direct.DirectLogoutPresenter
 import io.element.android.features.preferences.impl.utils.ShowDeveloperSettingsProvider
 import io.element.android.libraries.architecture.Presenter
+import io.element.android.libraries.core.meta.BuildMeta
 import io.element.android.libraries.designsystem.utils.snackbar.SnackbarDispatcher
 import io.element.android.libraries.designsystem.utils.snackbar.collectSnackbarMessageAsState
 import io.element.android.libraries.featureflag.api.FeatureFlagService
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class PreferencesRootPresenter @Inject constructor(
+    private val buildMeta: BuildMeta,
     private val matrixClient: MatrixClient,
     private val sessionVerificationService: SessionVerificationService,
     private val analyticsService: AnalyticsService,
@@ -113,7 +115,7 @@ class PreferencesRootPresenter @Inject constructor(
             showSecureBackupBadge = showSecureBackupIndicator,
             accountManagementUrl = accountManagementUrl.value,
             devicesManagementUrl = devicesManagementUrl.value,
-            showAnalyticsSettings = hasAnalyticsProviders,
+            showAnalyticsSettings = buildMeta.isDebuggable,
             showDeveloperSettings = showDeveloperSettings,
             canDeactivateAccount = canDeactivateAccount,
             showNotificationSettings = showNotificationSettings.value,

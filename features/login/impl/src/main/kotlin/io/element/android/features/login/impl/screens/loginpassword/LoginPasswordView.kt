@@ -131,13 +131,8 @@ fun LoginPasswordView(
                 IconTitleSubtitleMolecule(
                     modifier = Modifier.padding(top = 20.dp, start = 16.dp, end = 16.dp),
                     iconImageVector = Icons.Filled.AccountCircle,
-                    title = stringResource(
-                        id = R.string.screen_account_provider_signin_title,
-                        state.accountProvider.title
-                    ),
-                    subTitle = null //Removing subTitle from the LoginPassword Screen.
-                    //subTitle = stringResource(id = R.string.screen_login_subtitle)
-
+                    title = stringResource(id = R.string.screen_account_provider_signin_title,state.productionAppName),
+                    subTitle = null //Removing subTitle from the LoginPassword Screen
                 )
                 Spacer(Modifier.height(40.dp))
                 Box(Modifier.padding(horizontal = 16.dp)) {
