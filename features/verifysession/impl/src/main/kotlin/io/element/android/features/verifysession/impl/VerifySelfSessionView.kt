@@ -111,7 +111,6 @@ fun VerifySelfSessionView(
                     title = {},
                     actions = {
                         if (state.verificationFlowStep !is FlowStep.Completed &&
-                            state.displaySkipButton &&
                             LocalInspectionMode.current.not()) {
                             TextButton(
                                 text = stringResource(CommonStrings.action_skip),

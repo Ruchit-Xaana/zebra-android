@@ -116,6 +116,7 @@ class PreferencesRootPresenter @Inject constructor(
             accountManagementUrl = accountManagementUrl.value,
             devicesManagementUrl = devicesManagementUrl.value,
             showAnalyticsSettings = buildMeta.isDebuggable,
+            showLogs = buildMeta.isDebuggable,
             showDeveloperSettings = showDeveloperSettings,
             canDeactivateAccount = canDeactivateAccount,
             showNotificationSettings = showNotificationSettings.value,
