@@ -7,6 +7,7 @@
 
 package io.element.android.features.messages.impl.timeline
 
+import android.util.Log
 import com.squareup.anvil.annotations.ContributesBinding
 import io.element.android.libraries.di.RoomScope
 import io.element.android.libraries.di.SingleIn
@@ -30,6 +31,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.Closeable
 import java.util.Optional
 import javax.inject.Inject
@@ -48,9 +51,35 @@ class TimelineController @Inject constructor(
     private val liveTimeline = flowOf(room.liveTimeline)
     private val detachedTimeline = MutableStateFlow<Optional<Timeline>>(Optional.empty())
 
+    private val eventCache = mutableMapOf<String, String?>()
     @OptIn(ExperimentalCoroutinesApi::class)
     fun timelineItems(): Flow<List<MatrixTimelineItem>> {
-        return currentTimelineFlow.flatMapLatest { it.timelineItems }
+        return currentTimelineFlow
+            .flatMapLatest { timeline ->
+                timeline.timelineItems.map { timelineItems ->
+                    val referencedEventIds = timelineItems
+                        .mapNotNull { timelineItem ->
+                            if (timelineItem is MatrixTimelineItem.Event) {
+                                val eventId = timelineItem.eventId?.value
+                                if (eventId != null && eventCache.containsKey(eventId)) {
+                                    eventId to eventCache[eventId]
+                                }else if (eventId != null) {
+                                    val relatedEventId = findRelatedEventId(timelineItem)
+                                    eventCache[eventId] = relatedEventId
+                                    eventId to relatedEventId
+                                }else{
+                                    null
+                                }
+                            } else {
+                                null
+                            }
+                        }
+                        .toMap()
+                    timelineItems.filterNot { timelineItem ->
+                        timelineItem is MatrixTimelineItem.Event && timelineItem.eventId != null && referencedEventIds.containsValue(timelineItem.eventId?.value)
+                    }
+                }
+            }
     }
 
     fun isLive(): Flow<Boolean> {
@@ -120,6 +149,32 @@ class TimelineController @Inject constructor(
             else -> live
         }
     }.stateIn(coroutineScope, SharingStarted.Eagerly, room.liveTimeline)
+
+    private fun findRelatedEventId(event: MatrixTimelineItem.Event): String? {
+        if(event.eventId!=null) {
+            val debugInfo = event.event.debugInfo.originalJson
+            if (debugInfo != null) {
+                try {
+                    val jsonObject = JSONObject(debugInfo)
+                    val contentObject = jsonObject.getJSONObject("content")
+                    if (contentObject.getJSONObject("m.relates_to").has("rel_type")) {
+                        val relType = contentObject.getJSONObject("m.relates_to").get("rel_type")
+                        Log.d("TimelineController", "Found rel_type event index for event ${relType}")
+                        if (relType == "m.stream.replace") {
+                            if (contentObject.getJSONObject("m.relates_to").has("event_id")) {
+                                val relatedEventId = contentObject.getJSONObject("m.relates_to").get("event_id")
+                                Log.d("TimelineController", "Found relatedEventId event index for event ${relatedEventId}")
+                                return relatedEventId.toString()
+                            }
+                        }
+                    }
+                } catch (e: JSONException) {
+                    Log.e("TimelineController", "Error parsing debugInfo JSON: ${e.message}")
+                }
+            }
+        }
+        return null
+    }
 
     override fun activeTimelineFlow(): StateFlow<Timeline> {
         return currentTimelineFlow
