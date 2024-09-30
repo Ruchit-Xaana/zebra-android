@@ -11,6 +11,7 @@ import android.Manifest
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import com.squareup.anvil.annotations.ContributesBinding
+import io.element.android.appconfig.AnalyticsConfig
 import io.element.android.features.ftue.api.state.FtueService
 import io.element.android.features.ftue.api.state.FtueState
 import io.element.android.features.lockscreen.api.LockScreenService
@@ -84,10 +85,15 @@ class DefaultFtueService @Inject constructor(
             } else {
                 getNextStep(FtueStep.LockscreenSetup)
             }
-            FtueStep.LockscreenSetup -> if (needsAnalyticsOptIn()) {
-                FtueStep.AnalyticsOptIn
-            } else {
-                getNextStep(FtueStep.AnalyticsOptIn)
+            FtueStep.LockscreenSetup -> {
+                if(!AnalyticsConfig.ANALYTICS_SCREEN_ENABLED){
+                    setAnalyticsFalse()
+                }
+                if (needsAnalyticsOptIn()) {
+                    FtueStep.AnalyticsOptIn
+                } else {
+                    getNextStep(FtueStep.AnalyticsOptIn)
+                }
             }
             FtueStep.AnalyticsOptIn -> {
                 updateState()
@@ -121,6 +127,11 @@ class DefaultFtueService @Inject constructor(
 
     private suspend fun canSkipVerification(): Boolean {
         return sessionPreferencesStore.isSessionVerificationSkipped().first()
+    }
+
+    private suspend fun setAnalyticsFalse() {
+        analyticsService.setUserConsent(userConsent = false)
+        analyticsService.setDidAskUserConsent()
     }
 
     private suspend fun needsAnalyticsOptIn(): Boolean {

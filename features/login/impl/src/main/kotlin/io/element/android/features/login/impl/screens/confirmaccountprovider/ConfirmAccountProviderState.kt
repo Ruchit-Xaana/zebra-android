@@ -7,6 +7,7 @@
 
 package io.element.android.features.login.impl.screens.confirmaccountprovider
 
+import io.element.android.appconfig.ApplicationConfig
 import io.element.android.features.login.impl.accountprovider.AccountProvider
 import io.element.android.libraries.architecture.AsyncData
 import io.element.android.libraries.matrix.api.auth.OidcDetails
@@ -16,7 +17,12 @@ data class ConfirmAccountProviderState(
     val accountProvider: AccountProvider,
     val isAccountCreation: Boolean,
     val loginFlow: AsyncData<LoginFlow>,
-    val eventSink: (ConfirmAccountProviderEvents) -> Unit
+    val eventSink: (ConfirmAccountProviderEvents) -> Unit,
+    /**
+     * Temporary default values
+     */
+    val productionApplicationName: String = ApplicationConfig.PRODUCTION_APPLICATION_NAME,
+    val isDebugBuild: Boolean=true,
 ) {
     val submitEnabled: Boolean get() = accountProvider.url.isNotEmpty() && (loginFlow is AsyncData.Uninitialized || loginFlow is AsyncData.Loading)
 }

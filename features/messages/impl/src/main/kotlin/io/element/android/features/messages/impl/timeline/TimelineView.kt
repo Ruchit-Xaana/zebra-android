@@ -140,7 +140,10 @@ fun TimelineView(
                     }
                 }
                 items(
-                    items = state.timelineItems,
+                    /**
+                     * Filter out initial grouped messages about the room.
+                     */
+                    items = state.timelineItems.filterNot { timelineItem ->timelineItem is TimelineItem.GroupedEvents  },
                     contentType = { timelineItem -> timelineItem.contentType() },
                     key = { timelineItem -> timelineItem.identifier() },
                 ) { timelineItem ->

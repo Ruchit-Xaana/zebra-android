@@ -8,5 +8,6 @@
 package io.element.android.appconfig
 
 object AnalyticsConfig {
+    const val ANALYTICS_SCREEN_ENABLED = false
     const val POLICY_LINK = "https://element.io/cookie-policy"
 }

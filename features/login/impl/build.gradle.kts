@@ -29,6 +29,7 @@ anvil {
 dependencies {
     implementation(projects.anvilannotations)
     implementation(projects.appconfig)
+    implementation(project(":features:preferences:api"))
     anvil(projects.anvilcodegen)
     implementation(projects.libraries.core)
     implementation(projects.libraries.androidutils)

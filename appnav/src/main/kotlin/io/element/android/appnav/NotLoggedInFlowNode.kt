@@ -43,7 +43,7 @@ class NotLoggedInFlowNode @AssistedInject constructor(
     private val notLoggedInImageLoaderFactory: NotLoggedInImageLoaderFactory,
 ) : BaseFlowNode<NotLoggedInFlowNode.NavTarget>(
     backstack = BackStack(
-        initialElement = NavTarget.OnBoarding,
+        initialElement = NavTarget.LoginFlow(type = LoginFlowType.SIGN_IN_MANUAL),
         savedStateMap = buildContext.savedStateMap
     ),
     buildContext = buildContext,

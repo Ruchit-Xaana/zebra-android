@@ -24,6 +24,7 @@ import com.bumble.appyx.navmodel.backstack.operation.singleTop
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.element.android.anvilannotations.ContributesNode
+import io.element.android.appconfig.ZebraConfig.FAQ_URL
 import io.element.android.compound.theme.ElementTheme
 import io.element.android.features.login.api.LoginFlowType
 import io.element.android.features.login.impl.accountprovider.AccountProviderDataSource
@@ -33,6 +34,8 @@ import io.element.android.features.login.impl.screens.confirmaccountprovider.Con
 import io.element.android.features.login.impl.screens.createaccount.CreateAccountNode
 import io.element.android.features.login.impl.screens.loginpassword.LoginPasswordNode
 import io.element.android.features.login.impl.screens.searchaccountprovider.SearchAccountProviderNode
+import io.element.android.features.preferences.api.ConfigureTracingEntryPoint
+import io.element.android.libraries.androidutils.browser.openUrlInChromeCustomTab
 import io.element.android.libraries.architecture.BackstackView
 import io.element.android.libraries.architecture.BaseFlowNode
 import io.element.android.libraries.architecture.NodeInputs
@@ -52,6 +55,7 @@ class LoginFlowNode @AssistedInject constructor(
     @Assisted buildContext: BuildContext,
     @Assisted plugins: List<Plugin>,
     private val accountProviderDataSource: AccountProviderDataSource,
+    private val configureTracingEntryPoint: ConfigureTracingEntryPoint,
     private val defaultLoginUserStory: DefaultLoginUserStory,
     private val oidcActionFlow: OidcActionFlow,
     private val oidcEntryPoint: OidcEntryPoint,
@@ -115,6 +119,9 @@ class LoginFlowNode @AssistedInject constructor(
 
         @Parcelize
         data class OidcView(val oidcDetails: OidcDetails) : NavTarget
+
+        @Parcelize
+        data object ConfigureTracing : NavTarget
     }
 
     override fun resolve(navTarget: NavTarget, buildContext: BuildContext): Node {
@@ -155,6 +162,12 @@ class LoginFlowNode @AssistedInject constructor(
                     override fun onChangeAccountProvider() {
                         backstack.push(NavTarget.ChangeAccountProvider)
                     }
+                    override fun onOpenDeveloperSettings() {
+                        backstack.push(NavTarget.ConfigureTracing)
+                    }
+                    override fun onOpenAbout(activity: Activity,darkTheme:Boolean) {
+                        activity.openUrlInChromeCustomTab(null, darkTheme, FAQ_URL)
+                    }
                 }
                 createNode<ConfirmAccountProviderNode>(buildContext, plugins = listOf(inputs, callback))
             }
@@ -184,6 +197,9 @@ class LoginFlowNode @AssistedInject constructor(
             }
             NavTarget.LoginPassword -> {
                 createNode<LoginPasswordNode>(buildContext)
+            }
+            NavTarget.ConfigureTracing -> {
+                configureTracingEntryPoint.createNode(this, buildContext)
             }
             is NavTarget.OidcView -> {
                 oidcEntryPoint.createFallbackWebViewNode(this, buildContext, navTarget.oidcDetails.url)

@@ -258,6 +258,8 @@ Reason: %1$s."</string>
   <string name="dialog_unsaved_changes_description_android">"Your changes have not been saved. Are you sure you want to go back?"</string>
   <string name="dialog_unsaved_changes_title">"Save changes?"</string>
   <string name="error_account_creation_not_possible">"Your homeserver needs to be upgraded to support Matrix Authentication Service and account creation."</string>
+  <string name="screen_onboarding_welcome_title">Welcome to Zebra!</string>
+  <string name="screen_onboarding_welcome_message">"Welcome to the fastest %1$s ever. Supercharged for speed and simplicity."</string>
   <string name="error_failed_creating_the_permalink">"Failed creating the permalink"</string>
   <string name="error_failed_loading_map">"%1$s could not load the map. Please try again later."</string>
   <string name="error_failed_loading_messages">"Failed loading messages"</string>

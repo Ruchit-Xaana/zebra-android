@@ -7,6 +7,7 @@
 
 package io.element.android.features.login.impl.screens.confirmaccountprovider
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -17,6 +18,7 @@ import com.bumble.appyx.core.plugin.plugins
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.element.android.anvilannotations.ContributesNode
+import io.element.android.compound.theme.ElementTheme
 import io.element.android.features.login.impl.util.openLearnMorePage
 import io.element.android.libraries.architecture.NodeInputs
 import io.element.android.libraries.architecture.inputs
@@ -44,7 +46,9 @@ class ConfirmAccountProviderNode @AssistedInject constructor(
         fun onLoginPasswordNeeded()
         fun onOidcDetails(oidcDetails: OidcDetails)
         fun onCreateAccountContinue(url: String)
+        fun onOpenAbout(activity: Activity,darkTheme:Boolean)
         fun onChangeAccountProvider()
+        fun onOpenDeveloperSettings()
     }
 
     private fun onOidcDetails(data: OidcDetails) {
@@ -59,6 +63,14 @@ class ConfirmAccountProviderNode @AssistedInject constructor(
         plugins<Callback>().forEach { it.onCreateAccountContinue(url) }
     }
 
+    private fun onOpenDeveloperSettings() {
+        plugins<Callback>().forEach { it.onOpenDeveloperSettings() }
+    }
+
+    private fun onOpenAbout(activity: Activity,darkTheme:Boolean) {
+        plugins<Callback>().forEach { it.onOpenAbout(activity,darkTheme) }
+    }
+
     private fun onChangeAccountProvider() {
         plugins<Callback>().forEach { it.onChangeAccountProvider() }
     }
@@ -67,12 +79,16 @@ class ConfirmAccountProviderNode @AssistedInject constructor(
     override fun View(modifier: Modifier) {
         val state = presenter.present()
         val context = LocalContext.current
-        ConfirmAccountProviderView(
+        val activity = LocalContext.current as Activity
+        val isDark = ElementTheme.isLightTheme.not()
+        SplashScreenView(
             state = state,
             onOidcDetails = ::onOidcDetails,
             onNeedLoginPassword = ::onLoginPasswordNeeded,
             onLearnMoreClick = { openLearnMorePage(context) },
             onCreateAccountContinue = ::onCreateAccountContinue,
+            onOpenDeveloperSettings = ::onOpenDeveloperSettings,
+            onReportProblem = {(this::onOpenAbout)(activity,isDark)},
             modifier = modifier,
         )
     }

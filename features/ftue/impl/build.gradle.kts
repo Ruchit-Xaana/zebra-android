@@ -21,6 +21,7 @@ anvil {
 
 dependencies {
     implementation(projects.anvilannotations)
+    implementation(project(":appconfig"))
     anvil(projects.anvilcodegen)
     api(projects.features.ftue.api)
     implementation(projects.libraries.androidutils)
