@@ -40,4 +40,9 @@ sealed interface MessageComposerEvents {
     sealed interface AudioCapture : MessageComposerEvents {
         data object Start : AudioCapture
     }
+    sealed interface VoiceChat : MessageComposerEvents {
+        data object Launch : VoiceChat
+        data object Start : VoiceChat
+        data object Dismiss : VoiceChat
+    }
 }

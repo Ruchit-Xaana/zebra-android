@@ -98,7 +98,60 @@ class BotStream {
             }
         }
 
-            private fun convertHtmlToPlainText(htmlString: String): Spanned {
+    suspend fun sendVoiceChatPostRequest(url: String, payload: JSONObject): Flow<String> = flow {
+        functionMutex.withLock {
+                try {
+                    Log.d("BotStream", "Sending request to $url with payload: $payload")
+
+                    // Create the request body
+                    val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                    val requestBody: RequestBody = payload.toString().toRequestBody(mediaType)
+
+                    // Build the POST request
+                    val request = Request.Builder()
+                        .addHeader("content-type", "application/json")
+                        .addHeader("Origin", "null")
+                        .url(url)
+                        .post(requestBody)
+                        .build()
+
+                    client.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+                        val contentType = response.header("Content-Type")
+                        val reader = response.body?.charStream()?.buffered() ?: throw IOException("Empty response body")
+
+                        // Handle different content types
+                        when (contentType) {
+                            "text/event-stream; charset=utf-8" -> {
+                                reader.useLines { lines ->
+                                    lines.forEach { line ->
+                                        Log.d("BotStream", "Stream data: $line")
+                                        emit(line) // Emit each line of the stream
+                                    }
+                                }
+                            }
+                            "application/json" -> {
+                                reader.use { it.readText() }.let { jsonResponse ->
+                                    Log.d("BotStream", "JSON response: $jsonResponse")
+                                    emit(jsonResponse)
+                                }
+                            }
+                            else -> {
+                                throw IOException("Unsupported content type: $contentType")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.d("BotStream", "Error: ${e.message}")
+                    emit("Error: ${e.message}")
+                }
+        }
+    }
+
+
+
+    private fun convertHtmlToPlainText(htmlString: String): Spanned {
 
                 val spanned = HtmlCompat.fromHtml(htmlString, HtmlCompat.FROM_HTML_MODE_LEGACY)
                 if (spanned is Spannable) {

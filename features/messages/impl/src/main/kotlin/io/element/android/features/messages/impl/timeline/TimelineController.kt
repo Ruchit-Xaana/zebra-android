@@ -16,6 +16,8 @@ import io.element.android.libraries.matrix.api.room.MatrixRoom
 import io.element.android.libraries.matrix.api.timeline.MatrixTimelineItem
 import io.element.android.libraries.matrix.api.timeline.Timeline
 import io.element.android.libraries.matrix.api.timeline.TimelineProvider
+import io.element.android.libraries.matrix.api.timeline.item.event.MessageContent
+import io.element.android.libraries.matrix.api.timeline.item.event.TextMessageType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,6 +54,8 @@ class TimelineController @Inject constructor(
     private val detachedTimeline = MutableStateFlow<Optional<Timeline>>(Optional.empty())
 
     private val eventCache = mutableMapOf<String, String?>()
+    private val localCache = mutableMapOf<String, String>()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     fun timelineItems(): Flow<List<MatrixTimelineItem>> {
         return currentTimelineFlow
@@ -64,6 +68,7 @@ class TimelineController @Inject constructor(
                                 if (eventId != null && eventCache.containsKey(eventId)) {
                                     eventId to eventCache[eventId]
                                 }else if (eventId != null) {
+                                    cacheMessageIfInitFromHomepage(timelineItem)
                                     val relatedEventId = findRelatedEventId(timelineItem)
                                     eventCache[eventId] = relatedEventId
                                     eventId to relatedEventId
@@ -175,7 +180,29 @@ class TimelineController @Inject constructor(
         }
         return null
     }
-
+    private fun cacheMessageIfInitFromHomepage(timelineItem: MatrixTimelineItem.Event) {
+        if (timelineItem.event.isOwn && !localCache.containsKey(timelineItem.eventId?.value) && timelineItem.event.content is MessageContent) {
+            val messageContent = timelineItem.event.content as MessageContent
+            if (messageContent.type is TextMessageType) {
+                val textMessage = messageContent.type as TextMessageType
+                if (textMessage.body == "Init from homepage...") {
+                    val eventId = timelineItem.eventId?.value
+                    val formattedBody = textMessage.formatted?.body
+                    if (eventId != null && formattedBody != null) {
+                        localCache[eventId] = formattedBody
+                    }
+                }
+            }
+        }
+    }
+    fun getEventIdFromFormattedBody(formattedBody: String): String? {
+        for ((eventId, body) in localCache) {
+            if (body == formattedBody) {
+                return eventId
+            }
+        }
+        return null
+    }
     override fun activeTimelineFlow(): StateFlow<Timeline> {
         return currentTimelineFlow
     }

@@ -7,6 +7,8 @@
 @file:Suppress("all")
 package io.element.android.libraries.designsystem.icons
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Headset
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
@@ -17,9 +19,13 @@ object ZebraIcons {
     @Composable fun AudioCapture(): ImageVector {
         return ImageVector.vectorResource(R.drawable.audio_capture)
     }
+    @Composable fun HeadsetIcon(): ImageVector {
+        return Icons.Default.Headset
+    }
 
     val all @Composable get() = persistentListOf(
         AudioCapture(),
+        HeadsetIcon(),
     )
 
     val allResIds get() = persistentListOf(

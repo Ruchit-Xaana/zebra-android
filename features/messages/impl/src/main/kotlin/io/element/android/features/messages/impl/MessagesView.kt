@@ -61,6 +61,7 @@ import io.element.android.features.messages.impl.messagecomposer.AttachmentsBott
 import io.element.android.features.messages.impl.messagecomposer.AttachmentsState
 import io.element.android.features.messages.impl.messagecomposer.MessageComposerEvents
 import io.element.android.features.messages.impl.messagecomposer.MessageComposerView
+import io.element.android.features.messages.impl.messagecomposer.VoiceChatView
 import io.element.android.features.messages.impl.messagecomposer.suggestions.SuggestionsPickerView
 import io.element.android.features.messages.impl.pinned.banner.PinnedMessagesBannerState
 import io.element.android.features.messages.impl.pinned.banner.PinnedMessagesBannerView
@@ -178,91 +179,97 @@ fun MessagesView(
     fun onMoreReactionsClick(event: TimelineItem.Event) {
         state.customReactionState.eventSink(CustomReactionEvents.ShowCustomReactionSheet(event))
     }
-
-    Scaffold(
-        modifier = modifier,
-        contentWindowInsets = WindowInsets.statusBars,
-        topBar = {
-            Column {
-                ConnectivityIndicatorView(isOnline = state.hasNetworkConnection)
-                MessagesViewTopBar(
-                    roomName = state.roomName.dataOrNull(),
-                    roomAvatar = state.roomAvatar.dataOrNull(),
-                    heroes = state.heroes,
-                    callState = state.callState,
-                    onBackClick = {
-                        // Since the textfield is now based on an Android view, this is no longer done automatically.
-                        // We need to hide the keyboard when navigating out of this screen.
-                        localView.hideKeyboard()
-                        onBackClick()
+    if (state.composerState.showVoiceChatScreen) {
+        VoiceChatView(
+            state = state.composerState,
+            enableTextFormatting = state.enableTextFormatting
+        )
+    } else {
+        Scaffold(
+            modifier = modifier,
+            contentWindowInsets = WindowInsets.statusBars,
+            topBar = {
+                Column {
+                    ConnectivityIndicatorView(isOnline = state.hasNetworkConnection)
+                    MessagesViewTopBar(
+                        roomName = state.roomName.dataOrNull(),
+                        roomAvatar = state.roomAvatar.dataOrNull(),
+                        heroes = state.heroes,
+                        callState = state.callState,
+                        onBackClick = {
+                            // Since the textfield is now based on an Android view, this is no longer done automatically.
+                            // We need to hide the keyboard when navigating out of this screen.
+                            localView.hideKeyboard()
+                            onBackClick()
+                        },
+                        onRoomDetailsClick = onRoomDetailsClick,
+                        onJoinCallClick = onJoinCallClick,
+                    )
+                }
+            },
+            content = { padding ->
+                MessagesViewContent(
+                    state = state,
+                    modifier = Modifier
+                        .padding(padding)
+                        .consumeWindowInsets(padding),
+                    onMessageClick = ::onMessageClick,
+                    onMessageLongClick = ::onMessageLongClick,
+                    onUserDataClick = onUserDataClick,
+                    onLinkClick = onLinkClick,
+                    onReactionClick = ::onEmojiReactionClick,
+                    onReactionLongClick = ::onEmojiReactionLongClick,
+                    onMoreReactionsClick = ::onMoreReactionsClick,
+                    onReadReceiptClick = { event ->
+                        state.readReceiptBottomSheetState.eventSink(ReadReceiptBottomSheetEvents.EventSelected(event))
                     },
-                    onRoomDetailsClick = onRoomDetailsClick,
+                    onSendLocationClick = onSendLocationClick,
+                    onCreatePollClick = onCreatePollClick,
+                    onSwipeToReply = { targetEvent ->
+                        state.eventSink(MessagesEvents.HandleAction(TimelineItemAction.Reply, targetEvent))
+                    },
+                    forceJumpToBottomVisibility = forceJumpToBottomVisibility,
                     onJoinCallClick = onJoinCallClick,
+                    onViewAllPinnedMessagesClick = onViewAllPinnedMessagesClick,
+                    onFetchMessages = onFetchMessages,
                 )
+            },
+            snackbarHost = {
+                SnackbarHost(
+                    snackbarHostState,
+                    modifier = Modifier.navigationBarsPadding()
+                )
+            },
+        )
+
+        ActionListView(
+            state = state.actionListState,
+            onSelectAction = ::onActionSelected,
+            onCustomReactionClick = { event ->
+                state.customReactionState.eventSink(CustomReactionEvents.ShowCustomReactionSheet(event))
+            },
+            onEmojiReactionClick = ::onEmojiReactionClick,
+            onVerifiedUserSendFailureClick = { event ->
+                state.timelineState.eventSink(TimelineEvents.ComputeVerifiedUserSendFailure(event))
+            },
+        )
+
+        CustomReactionBottomSheet(
+            state = state.customReactionState,
+            onSelectEmoji = { uniqueId, emoji ->
+                state.eventSink(MessagesEvents.ToggleReaction(emoji.unicode, uniqueId))
             }
-        },
-        content = { padding ->
-            MessagesViewContent(
-                state = state,
-                modifier = Modifier
-                    .padding(padding)
-                    .consumeWindowInsets(padding),
-                onMessageClick = ::onMessageClick,
-                onMessageLongClick = ::onMessageLongClick,
-                onUserDataClick = onUserDataClick,
-                onLinkClick = onLinkClick,
-                onReactionClick = ::onEmojiReactionClick,
-                onReactionLongClick = ::onEmojiReactionLongClick,
-                onMoreReactionsClick = ::onMoreReactionsClick,
-                onReadReceiptClick = { event ->
-                    state.readReceiptBottomSheetState.eventSink(ReadReceiptBottomSheetEvents.EventSelected(event))
-                },
-                onSendLocationClick = onSendLocationClick,
-                onCreatePollClick = onCreatePollClick,
-                onSwipeToReply = { targetEvent ->
-                    state.eventSink(MessagesEvents.HandleAction(TimelineItemAction.Reply, targetEvent))
-                },
-                forceJumpToBottomVisibility = forceJumpToBottomVisibility,
-                onJoinCallClick = onJoinCallClick,
-                onViewAllPinnedMessagesClick = onViewAllPinnedMessagesClick,
-                onFetchMessages = onFetchMessages,
-            )
-        },
-        snackbarHost = {
-            SnackbarHost(
-                snackbarHostState,
-                modifier = Modifier.navigationBarsPadding()
-            )
-        },
-    )
+        )
 
-    ActionListView(
-        state = state.actionListState,
-        onSelectAction = ::onActionSelected,
-        onCustomReactionClick = { event ->
-            state.customReactionState.eventSink(CustomReactionEvents.ShowCustomReactionSheet(event))
-        },
-        onEmojiReactionClick = ::onEmojiReactionClick,
-        onVerifiedUserSendFailureClick = { event ->
-            state.timelineState.eventSink(TimelineEvents.ComputeVerifiedUserSendFailure(event))
-        },
-    )
-
-    CustomReactionBottomSheet(
-        state = state.customReactionState,
-        onSelectEmoji = { uniqueId, emoji ->
-            state.eventSink(MessagesEvents.ToggleReaction(emoji.unicode, uniqueId))
-        }
-    )
-
-    ReactionSummaryView(state = state.reactionSummaryState)
-    ReadReceiptBottomSheet(
-        state = state.readReceiptBottomSheetState,
-        onUserDataClick = onUserDataClick,
-    )
-    ReinviteDialog(state = state)
+        ReactionSummaryView(state = state.reactionSummaryState)
+        ReadReceiptBottomSheet(
+            state = state.readReceiptBottomSheetState,
+            onUserDataClick = onUserDataClick,
+        )
+        ReinviteDialog(state = state)
+        VoiceChatView(state = state.composerState, enableTextFormatting = state.enableTextFormatting)
+    }
 }
-
 @Composable
 private fun ReinviteDialog(state: MessagesState) {
     if (state.showReinvitePrompt) {
