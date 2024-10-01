@@ -81,6 +81,7 @@ fun TextComposer(
     enableVoiceMessages: Boolean,
     onRequestFocus: () -> Unit,
     onSendMessage: () -> Unit,
+    onFetchMessages: () -> Unit,
     onResetComposerMode: () -> Unit,
     onAddAttachment: () -> Unit,
     onDismissTextFormatting: () -> Unit,
@@ -103,6 +104,10 @@ fun TextComposer(
     }
     val onSendClick = {
         onSendMessage()
+        /**
+         * Now start sync to get latest messages
+         */
+        onFetchMessages()
     }
 
     val onPlayVoiceMessageClick = {
@@ -689,6 +694,7 @@ private fun ATextComposer(
         enableVoiceMessages = enableVoiceMessages,
         onRequestFocus = {},
         onSendMessage = {},
+        onFetchMessages = {},
         onResetComposerMode = {},
         onAddAttachment = {},
         onDismissTextFormatting = {},

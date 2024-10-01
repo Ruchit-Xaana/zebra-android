@@ -122,6 +122,7 @@ fun MessagesView(
     onCreatePollClick: () -> Unit,
     onJoinCallClick: () -> Unit,
     onViewAllPinnedMessagesClick: () -> Unit,
+    onFetchMessages: () -> Unit,
     modifier: Modifier = Modifier,
     forceJumpToBottomVisibility: Boolean = false,
 ) {
@@ -224,6 +225,7 @@ fun MessagesView(
                 forceJumpToBottomVisibility = forceJumpToBottomVisibility,
                 onJoinCallClick = onJoinCallClick,
                 onViewAllPinnedMessagesClick = onViewAllPinnedMessagesClick,
+                onFetchMessages = onFetchMessages,
             )
         },
         snackbarHost = {
@@ -318,6 +320,7 @@ private fun MessagesViewContent(
     onCreatePollClick: () -> Unit,
     onJoinCallClick: () -> Unit,
     onViewAllPinnedMessagesClick: () -> Unit,
+    onFetchMessages: () -> Unit,
     forceJumpToBottomVisibility: Boolean,
     modifier: Modifier = Modifier,
     onSwipeToReply: (TimelineItem.Event) -> Unit,
@@ -415,6 +418,7 @@ private fun MessagesViewContent(
                 MessagesViewComposerBottomSheetContents(
                     subcomposing = subcomposing,
                     state = state,
+                    onFetchMessages = onFetchMessages,
                 )
             },
             sheetContentKey = sheetResizeContentKey.intValue,
@@ -428,6 +432,7 @@ private fun MessagesViewContent(
 private fun MessagesViewComposerBottomSheetContents(
     subcomposing: Boolean,
     state: MessagesState,
+    onFetchMessages: () -> Unit,
 ) {
     if (state.userEventPermissions.canSendMessage) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -453,6 +458,7 @@ private fun MessagesViewComposerBottomSheetContents(
                 voiceMessageState = state.voiceMessageComposerState,
                 subcomposing = subcomposing,
                 enableVoiceMessages = state.enableVoiceMessages,
+                onFetchMessages = onFetchMessages,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -585,6 +591,7 @@ internal fun MessagesViewPreview(@PreviewParameter(MessagesStateProvider::class)
         onCreatePollClick = {},
         onJoinCallClick = {},
         onViewAllPinnedMessagesClick = { },
+        onFetchMessages = {},
         forceJumpToBottomVisibility = true,
     )
 }

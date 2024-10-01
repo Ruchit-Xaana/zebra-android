@@ -35,6 +35,7 @@ internal fun MessageComposerView(
     voiceMessageState: VoiceMessageComposerState,
     subcomposing: Boolean,
     enableVoiceMessages: Boolean,
+    onFetchMessages: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val view = LocalView.current
@@ -101,6 +102,7 @@ internal fun MessageComposerView(
         subcomposing = subcomposing,
         onRequestFocus = ::onRequestFocus,
         onSendMessage = ::sendMessage,
+        onFetchMessages = onFetchMessages,
         composerMode = state.mode,
         showTextFormatting = state.showTextFormatting,
         onResetComposerMode = ::onCloseSpecialMode,
@@ -130,6 +132,7 @@ internal fun MessageComposerViewPreview(
             state = state,
             voiceMessageState = aVoiceMessageComposerState(),
             enableVoiceMessages = true,
+            onFetchMessages = {},
             subcomposing = false,
         )
         MessageComposerView(
@@ -137,6 +140,7 @@ internal fun MessageComposerViewPreview(
             state = state,
             voiceMessageState = aVoiceMessageComposerState(),
             enableVoiceMessages = true,
+            onFetchMessages = {},
             subcomposing = false,
         )
     }
@@ -153,6 +157,7 @@ internal fun MessageComposerViewVoicePreview(
             state = aMessageComposerState(),
             voiceMessageState = state,
             enableVoiceMessages = true,
+            onFetchMessages = {},
             subcomposing = false,
         )
     }

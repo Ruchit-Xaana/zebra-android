@@ -87,6 +87,7 @@ class MessagesNode @AssistedInject constructor(
         fun onEditPollClick(eventId: EventId)
         fun onJoinCallClick(roomId: RoomId)
         fun onViewAllPinnedEvents()
+        fun onFetchMessages()
     }
 
     override fun onBuilt() {
@@ -178,6 +179,10 @@ class MessagesNode @AssistedInject constructor(
         callbacks.forEach { it.onViewAllPinnedEvents() }
     }
 
+    private fun onFetchMessages() {
+        callbacks.forEach { it.onFetchMessages() }
+    }
+
     private fun onSendLocationClick() {
         callbacks.forEach { it.onSendLocationClick() }
     }
@@ -215,6 +220,7 @@ class MessagesNode @AssistedInject constructor(
                 onCreatePollClick = this::onCreatePollClick,
                 onJoinCallClick = this::onJoinCallClick,
                 onViewAllPinnedMessagesClick = this::onViewAllPinnedMessagesClick,
+                onFetchMessages = this::onFetchMessages,
                 modifier = modifier,
             )
 

@@ -50,7 +50,6 @@ import io.element.android.features.poll.api.create.CreatePollMode
 import io.element.android.libraries.architecture.BackstackWithOverlayBox
 import io.element.android.libraries.architecture.BaseFlowNode
 import io.element.android.libraries.architecture.createNode
-import io.element.android.libraries.architecture.inputs
 import io.element.android.libraries.architecture.overlay.Overlay
 import io.element.android.libraries.architecture.overlay.operation.show
 import io.element.android.libraries.di.RoomScope
@@ -74,8 +73,11 @@ import io.element.android.libraries.textcomposer.mentions.MentionSpanTheme
 import io.element.android.services.analytics.api.AnalyticsService
 import io.element.android.services.analyticsproviders.api.trackers.captureInteraction
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
 @ContributesNode(RoomScope::class)
@@ -224,6 +226,11 @@ class MessagesFlowNode @AssistedInject constructor(
                     override fun onViewAllPinnedEvents() {
                         backstack.push(NavTarget.PinnedMessagesList)
                     }
+                    override fun onFetchMessages() {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            startSyncProcess()
+                        }
+                    }
                 }
                 val inputs = MessagesNode.Inputs(focusedEventId = navTarget.focusedEventId)
                 createNode<MessagesNode>(buildContext, listOf(callback, inputs))
@@ -317,6 +324,9 @@ class MessagesFlowNode @AssistedInject constructor(
                 node(buildContext) {}
             }
         }
+    }
+    private suspend fun startSyncProcess() {
+        matrixClient.syncService().startSync()
     }
 
     private fun processEventClick(event: TimelineItem.Event): Boolean {
