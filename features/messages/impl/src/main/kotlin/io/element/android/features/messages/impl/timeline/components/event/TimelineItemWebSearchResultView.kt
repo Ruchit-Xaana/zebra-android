@@ -11,11 +11,19 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
@@ -26,8 +34,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -42,6 +50,7 @@ import io.element.android.features.messages.impl.timeline.components.layout.Cont
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
 import io.element.android.features.messages.impl.timeline.model.event.WebSearchResultViewModel
 import io.element.android.libraries.designsystem.theme.font.rubikFontFamily
+import io.element.android.libraries.designsystem.theme.hyperlinkColor
 import io.element.android.libraries.textcomposer.ElementRichTextEditorStyle
 import io.element.android.wysiwyg.compose.EditorStyledText
 
@@ -71,46 +80,62 @@ fun TimelineItemWebSearchResultView(
 
         Box(modifier = modifier.padding(10.dp)) {
             Column() {
-                Text(text = "Sources:", fontWeight = FontWeight.Bold, fontSize = 20.sp, fontFamily = rubikFontFamily) // Heading for the links
-                Spacer(modifier = Modifier.height(6.dp))
-                Column {
-                    links.forEach { link ->
-                        val context = LocalContext.current
-                        ClickableText(
-                            text = buildAnnotatedString {
-                                pushStyle(style = SpanStyle(fontSize = 18.sp)) // Increase bullet point size
-                                append("\u2022")
-                                pop() // Bullet point with space
-                                pushStyle(
-                                    style = SpanStyle(
-                                        color = Color.Blue, // Set link color
-                                        textDecoration = TextDecoration.Underline, // Add underline
-                                        fontFamily = rubikFontFamily
-                                    )
+                if(links.isEmpty()&&displayedText.isEmpty()) {
+                    Text(text = "Thinking...",color = ElementTheme.colors.textPrimary, fontWeight = FontWeight.Normal, fontSize = 18.sp, fontFamily = rubikFontFamily)
+                }
+                if(links.isNotEmpty()) {
+                    IconWithText(Icons.AutoMirrored.Filled.List, "Sources:", FontWeight.Bold, 16.sp, 35.dp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Column {
+                        links.forEach { link ->
+                            val context = LocalContext.current
+                            Row(
+                                modifier = Modifier.padding(vertical = 0.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Circle, // Use your desired icon here
+                                    contentDescription = null, // Provide a description for accessibility
+                                    modifier = Modifier.size(10.dp),
+                                    tint = ElementTheme.colors.textPrimary
                                 )
-                                append(link.toString()) // Append the link text
-                                pop()
-                            },
-                            onClick = {
-                                val url = link.toString() // Get the URL from the Spanned object
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                context.startActivity(intent)
-                            },
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                ClickableText(
+                                    text = buildAnnotatedString {
+                                        pushStyle(style = SpanStyle(fontSize = 18.sp))
+                                        pop()
+                                        pushStyle(
+                                            style = SpanStyle(
+                                                color = ElementTheme.colors.hyperlinkColor,
+                                                textDecoration = TextDecoration.Underline,
+                                                fontFamily = rubikFontFamily
+                                            )
+                                        )
+                                        append(link)
+                                        pop()
+                                    },
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link.toString()))
+                                        context.startActivity(intent)
+                                    },
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                        }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(8.dp)) // Add some space between links and text
-                Text(text = "Answer:", fontWeight = FontWeight.Bold, fontSize = 20.sp, fontFamily = rubikFontFamily) // Heading for the links
-                Spacer(modifier = Modifier.height(6.dp))
-                EditorStyledText(
-                    text = displayedText,
-                    onLinkClickedListener = onLinkClick,
-                    style = ElementRichTextEditorStyle.textStyle(),
-                    onTextLayout = ContentAvoidingLayout.measureLegacyLastTextLine(onContentLayoutChange = onContentLayoutChange),
-                    releaseOnDetach = false,
-                )
+                if(displayedText.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp)) // Add some space between links and text
+                    IconWithText(Icons.Outlined.Notifications,"Answer:", FontWeight.Bold,16.sp,35.dp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    EditorStyledText(
+                        text = displayedText,
+                        onLinkClickedListener = onLinkClick,
+                        style = ElementRichTextEditorStyle.textStyle(),
+                        onTextLayout = ContentAvoidingLayout.measureLegacyLastTextLine(onContentLayoutChange = onContentLayoutChange),
+                        releaseOnDetach = false,
+                    )
+                }
             }
 
             LaunchedEffect(Unit) {
