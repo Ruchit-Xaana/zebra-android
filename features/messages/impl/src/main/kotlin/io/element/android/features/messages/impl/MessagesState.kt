@@ -16,6 +16,7 @@ import io.element.android.features.messages.impl.timeline.components.customreact
 import io.element.android.features.messages.impl.timeline.components.reactionsummary.ReactionSummaryState
 import io.element.android.features.messages.impl.timeline.components.receipt.bottomsheet.ReadReceiptBottomSheetState
 import io.element.android.features.messages.impl.typing.TypingNotificationState
+import io.element.android.features.messages.impl.voicemessages.chat.VoiceMessageChatState
 import io.element.android.features.messages.impl.voicemessages.composer.VoiceMessageComposerState
 import io.element.android.libraries.architecture.AsyncData
 import io.element.android.libraries.designsystem.components.avatar.AvatarData
@@ -47,6 +48,7 @@ data class MessagesState(
     val callState: RoomCallState,
     val appName: String,
     val pinnedMessagesBannerState: PinnedMessagesBannerState,
+    val voiceChatState: VoiceMessageChatState,
     val eventSink: (MessagesEvents) -> Unit
 )
 

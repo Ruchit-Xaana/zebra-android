@@ -20,7 +20,12 @@ anvil {
 }
 
 dependencies {
-    releaseImplementation(libs.matrix.sdk)
+    if (file("${rootDir.path}/libraries/rustsdk/matrix-rust-sdk.aar").exists()) {
+        println("\nNote: Using local binary of the Rust SDK for release.\n")
+        releaseImplementation(projects.libraries.rustsdk)
+    } else {
+        releaseImplementation(libs.matrix.sdk)
+    }
     if (file("${rootDir.path}/libraries/rustsdk/matrix-rust-sdk.aar").exists()) {
         println("\nNote: Using local binary of the Rust SDK.\n")
         debugImplementation(projects.libraries.rustsdk)

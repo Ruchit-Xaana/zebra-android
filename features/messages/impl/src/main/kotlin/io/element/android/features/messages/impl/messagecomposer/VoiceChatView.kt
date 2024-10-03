@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,21 +28,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import io.element.android.compound.theme.ElementTheme
+import io.element.android.features.messages.impl.voicemessages.chat.VoiceChatEvents
+import io.element.android.features.messages.impl.voicemessages.chat.VoiceMessageChatState
 import io.element.android.libraries.androidutils.ui.hideKeyboard
-import io.element.android.libraries.designsystem.preview.ElementPreview
-import io.element.android.libraries.designsystem.preview.PreviewsDayNight
-import io.element.android.libraries.designsystem.theme.components.Button
+
 import io.element.android.libraries.designsystem.theme.components.Text
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun VoiceChatView(
-    state: MessageComposerState,
-    enableTextFormatting: Boolean,
-    modifier: Modifier = Modifier,
+    state: VoiceMessageChatState,
+    composerState: MessageComposerState,
 ) {
     val localView = LocalView.current
-    var isVisible by rememberSaveable { mutableStateOf(state.showVoiceChatScreen) }
+    var isVisible by rememberSaveable { mutableStateOf(composerState.showVoiceChatScreen) }
+    var enableButton by rememberSaveable { mutableStateOf(state.enableRecording) }
 
     BackHandler(enabled = isVisible) {
         isVisible = false
@@ -49,22 +50,34 @@ internal fun VoiceChatView(
     LaunchedEffect(Unit) {
         localView.hideKeyboard()
     }
+    LaunchedEffect(state.enableRecording) {
+        enableButton = if (state.enableRecording) {
+            localView.hideKeyboard()
+            true
+        } else {
+            false
+        }
+    }
 
     LaunchedEffect(isVisible) {
         if (!isVisible) {
-            state.eventSink(MessageComposerEvents.VoiceChat.Dismiss)
+            composerState.eventSink(MessageComposerEvents.VoiceChat.Dismiss)
         }
     }
 
     if (isVisible) {
        VoiceChatScreen(
-           state = state
+           state = state,
+           composerState = composerState,
+           enableButton = enableButton
        )
     }
 }
 @Composable
 private fun VoiceChatScreen(
-    state: MessageComposerState,
+    state: VoiceMessageChatState,
+    composerState: MessageComposerState,
+    enableButton : Boolean
 ) {
     Column(
         modifier = Modifier
@@ -88,27 +101,25 @@ private fun VoiceChatScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Button(
-                text = "Start",
-                onClick = { state.eventSink(MessageComposerEvents.VoiceChat.Start) },
+                enabled = enableButton,
+                onClick = { state.eventSink(VoiceChatEvents.Start) },
+                colors = ButtonDefaults.buttonColors(),
                 modifier = Modifier.weight(1f)
             )
+            {
+                Text(text = "Start")
+            }
 
             Button(
-                text = "Dismiss",
-                onClick = { state.eventSink(MessageComposerEvents.VoiceChat.Dismiss) },
+                enabled = enableButton,
+                onClick = { composerState.eventSink(MessageComposerEvents.VoiceChat.Dismiss) },
+                colors = ButtonDefaults.buttonColors(),
                 modifier = Modifier.weight(1f)
             )
+            {
+                Text(text = "Dismiss")
+            }
         }
 
     }
-}
-
-@PreviewsDayNight
-@Composable
-internal fun VoiceChatPreview() = ElementPreview {
-    VoiceChatScreen(
-        state = aMessageComposerState(
-            showVoiceChatScreen = true,
-        ),
-    )
 }

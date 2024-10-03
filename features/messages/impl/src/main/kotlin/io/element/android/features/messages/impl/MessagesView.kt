@@ -181,8 +181,8 @@ fun MessagesView(
     }
     if (state.composerState.showVoiceChatScreen) {
         VoiceChatView(
-            state = state.composerState,
-            enableTextFormatting = state.enableTextFormatting
+            state = state.voiceChatState,
+            composerState = state.composerState,
         )
     } else {
         Scaffold(
@@ -267,7 +267,6 @@ fun MessagesView(
             onUserDataClick = onUserDataClick,
         )
         ReinviteDialog(state = state)
-        VoiceChatView(state = state.composerState, enableTextFormatting = state.enableTextFormatting)
     }
 }
 @Composable

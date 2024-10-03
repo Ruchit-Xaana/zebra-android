@@ -47,6 +47,7 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemStateContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemTextBasedContent
 import io.element.android.features.messages.impl.typing.TypingNotificationPresenter
+import io.element.android.features.messages.impl.voicemessages.chat.VoiceMessageChatPresenter
 import io.element.android.features.messages.impl.voicemessages.composer.VoiceMessageComposerPresenter
 import io.element.android.features.networkmonitor.api.NetworkMonitor
 import io.element.android.features.networkmonitor.api.NetworkStatus
@@ -90,6 +91,7 @@ class MessagesPresenter @AssistedInject constructor(
     private val room: MatrixRoom,
     private val composerPresenter: MessageComposerPresenter,
     private val voiceMessageComposerPresenter: VoiceMessageComposerPresenter,
+    private val voiceChatPresenter: VoiceMessageChatPresenter,
     timelinePresenterFactory: TimelinePresenter.Factory,
     private val typingNotificationPresenter: TypingNotificationPresenter,
     private val actionListPresenterFactory: ActionListPresenter.Factory,
@@ -131,6 +133,7 @@ class MessagesPresenter @AssistedInject constructor(
         val reactionSummaryState = reactionSummaryPresenter.present()
         val readReceiptBottomSheetState = readReceiptBottomSheetPresenter.present()
         val pinnedMessagesBannerState = pinnedMessagesBannerPresenter.present()
+        val voiceChatState = voiceChatPresenter.present()
 
         val syncUpdateFlow = room.syncUpdateFlow.collectAsState()
 
@@ -230,6 +233,7 @@ class MessagesPresenter @AssistedInject constructor(
             appName = buildMeta.applicationName,
             callState = callState,
             pinnedMessagesBannerState = pinnedMessagesBannerState,
+            voiceChatState = voiceChatState,
             eventSink = { handleEvents(it) }
         )
     }

@@ -1,0 +1,145 @@
+/*
+ * Copyright 2024 New Vector Ltd.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * Please see LICENSE in the repository root for full details.
+ */
+
+package io.element.android.features.messages.impl.voicemessages.chat
+
+import android.Manifest
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import io.element.android.appconfig.AuthenticationConfig.BOT_API_URL
+import io.element.android.features.messages.impl.timeline.TimelineController
+import io.element.android.features.messages.impl.timeline.stream.BotStream
+import io.element.android.features.messages.impl.voicemessages.VoiceMessageException
+import io.element.android.libraries.architecture.Presenter
+import io.element.android.libraries.di.RoomScope
+import io.element.android.libraries.di.SingleIn
+import io.element.android.libraries.matrix.api.room.MatrixRoom
+import io.element.android.libraries.permissions.api.PermissionsEvents
+import io.element.android.libraries.permissions.api.PermissionsPresenter
+import io.element.android.libraries.voicerecorder.api.SpeechRecognitionListener
+import io.element.android.libraries.voicerecorder.impl.DefaultAudioRecorder
+import io.element.android.services.analytics.api.AnalyticsService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import org.json.JSONObject
+import timber.log.Timber
+import javax.inject.Inject
+
+@SingleIn(RoomScope::class)
+class VoiceMessageChatPresenter @Inject constructor(
+    private val room: MatrixRoom,
+    private val analyticsService: AnalyticsService,
+    permissionsPresenterFactory: PermissionsPresenter.Factory,
+    private val timelineController: TimelineController,
+    private val audioRecorder: DefaultAudioRecorder,
+) : Presenter<VoiceMessageChatState> {
+    private val micPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.RECORD_AUDIO)
+
+    @Composable
+    override fun present(): VoiceMessageChatState {
+        val localCoroutineScope = rememberCoroutineScope()
+        val micPermissionState = micPermissionPresenter.present()
+        var enableRecording: Boolean by remember { mutableStateOf(true) }
+
+        fun handleEvents(event: VoiceChatEvents) {
+            when (event) {
+                VoiceChatEvents.Start -> {
+                    Timber.v("Voice chat Started")
+                    val permissionGranted = micPermissionState.permissionGranted
+                    when {
+                        permissionGranted -> {
+                            localCoroutineScope.startRecording(object : SpeechRecognitionListener {
+                                override fun onTextRecognized(recognizedText: String) {
+                                    enableRecording = false
+                                    sendMessageToRoom(room, recognizedText)
+                                }
+
+                                override fun onError(error: Int) {
+                                    enableRecording = false
+                                }
+                            })
+                        }
+                        else -> {
+                            Timber.i("Microphone permission needed")
+                            micPermissionState.eventSink(PermissionsEvents.RequestPermissions)
+                        }
+                    }
+                }
+            }
+        }
+        return VoiceMessageChatState(
+            enableRecording = enableRecording,
+            eventSink = { handleEvents(it) },
+        )
+    }
+
+    private fun CoroutineScope.startRecording(callback: SpeechRecognitionListener) = launch {
+        try {
+            audioRecorder.startRecording(object : SpeechRecognitionListener {
+                override fun onTextRecognized(recognizedText: String) {
+                    // Handle the recognized text here
+                    callback.onTextRecognized(recognizedText)
+                    audioRecorder.stopRecording()
+                }
+
+                override fun onError(error: Int) {
+                    // Handle error here
+                    callback.onError(error)
+                    Timber.e("Speech recognition error: $error")
+                    audioRecorder.stopRecording()
+                }
+            })
+        } catch (e: SecurityException) {
+            Timber.e(e, "Audio Capture error")
+            analyticsService.trackError(VoiceMessageException.PermissionMissing("Expected permission to record but none", e))
+        }
+    }
+
+    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                room.sendMessage("Init from homepage...", "<p>${recognizedText}</p>", emptyList())
+                val currentUserId = room.sessionId
+                val currentRoomId = room.roomId
+                val messageEventId = waitForEventId("<p>${recognizedText}</p>")
+                if(messageEventId!=null) {
+                    val payload = JSONObject().apply {
+                        put("query", recognizedText)
+                        put("eventId", messageEventId)
+                        put("user_id", currentUserId)
+                    }
+                    val botApiUrl = "$BOT_API_URL/stream_audio/$currentRoomId"
+                    val zebraStream = BotStream()
+                    zebraStream.startJsonStream(botApiUrl, payload)
+                }
+            } catch (e: Exception) {
+                Timber.e(e.message)
+            }
+        }
+    }
+    private suspend fun waitForEventId(formattedBody: String): String? {
+        return withTimeoutOrNull(5000L) {
+            var eventId: String? = null
+            while (eventId == null) {
+                eventId = timelineController.getEventIdFromFormattedBody(formattedBody)
+                if (eventId == null) {
+                    delay(500)
+                }
+            }
+            eventId
+        }
+    }
+}
+
+

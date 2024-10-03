@@ -104,12 +104,12 @@ private fun AttachmentSourcePickerMenu(
             headlineContent = { Text(stringResource(R.string.screen_room_action_audio_capture_stt)) },
             style = ListItemStyle.Primary,
         )
-//        ListItem(
-//            modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.VoiceChat.Launch) },
-//            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.HeadsetIcon())),
-//            headlineContent = { Text(stringResource(R.string.screen_room_action_start_voice_chat)) },
-//            style = ListItemStyle.Primary,
-//        )
+        ListItem(
+            modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.VoiceChat.Launch) },
+            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.HeadsetIcon())),
+            headlineContent = { Text(stringResource(R.string.screen_room_action_start_voice_chat)) },
+            style = ListItemStyle.Primary,
+        )
         ListItem(
             modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.PickAttachmentSource.PhotoFromCamera) },
             leadingContent = ListItemContent.Icon(IconSource.Vector(CompoundIcons.TakePhoto())),

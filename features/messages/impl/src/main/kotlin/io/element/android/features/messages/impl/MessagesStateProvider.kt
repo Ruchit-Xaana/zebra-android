@@ -27,6 +27,8 @@ import io.element.android.features.messages.impl.timeline.components.receipt.bot
 import io.element.android.features.messages.impl.timeline.model.TimelineItem
 import io.element.android.features.messages.impl.timeline.model.event.aTimelineItemTextContent
 import io.element.android.features.messages.impl.typing.aTypingNotificationState
+import io.element.android.features.messages.impl.voicemessages.chat.VoiceChatEvents
+import io.element.android.features.messages.impl.voicemessages.chat.VoiceMessageChatState
 import io.element.android.features.messages.impl.voicemessages.composer.VoiceMessageComposerState
 import io.element.android.features.messages.impl.voicemessages.composer.aVoiceMessageComposerState
 import io.element.android.features.messages.impl.voicemessages.composer.aVoiceMessagePreviewState
@@ -137,6 +139,7 @@ fun aMessagesState(
     callState = callState,
     appName = "Element",
     pinnedMessagesBannerState = pinnedMessagesBannerState,
+    voiceChatState = aVoiceChatState(),
     eventSink = eventSink,
 )
 
@@ -152,6 +155,13 @@ fun aUserEventPermissions(
     canSendMessage = canSendMessage,
     canSendReaction = canSendReaction,
     canPinUnpin = canPinUnpin,
+)
+
+fun aVoiceChatState(
+    eventSink: (VoiceChatEvents) -> Unit = {}
+) = VoiceMessageChatState(
+    enableRecording = true,
+    eventSink = eventSink,
 )
 
 fun aReactionSummaryState(

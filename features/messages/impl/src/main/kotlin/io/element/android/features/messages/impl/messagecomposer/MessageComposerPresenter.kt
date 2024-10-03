@@ -10,7 +10,6 @@ package io.element.android.features.messages.impl.messagecomposer
 import android.Manifest
 import android.annotation.SuppressLint
 import android.net.Uri
-import android.util.Log
 import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -29,14 +28,11 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import im.vector.app.features.analytics.plan.Composer
 import im.vector.app.features.analytics.plan.Interaction
-import io.element.android.appconfig.AuthenticationConfig
-import io.element.android.appconfig.ZebraConfig
 import io.element.android.features.messages.impl.attachments.Attachment
 import io.element.android.features.messages.impl.attachments.preview.error.sendAttachmentError
 import io.element.android.features.messages.impl.draft.ComposerDraftService
 import io.element.android.features.messages.impl.messagecomposer.suggestions.SuggestionsProcessor
 import io.element.android.features.messages.impl.timeline.TimelineController
-import io.element.android.features.messages.impl.timeline.stream.BotStream
 import io.element.android.features.messages.impl.utils.TextPillificationHelper
 import io.element.android.features.messages.impl.voicemessages.VoiceMessageException
 import io.element.android.libraries.architecture.Presenter
@@ -85,7 +81,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -94,14 +89,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import org.json.JSONObject
-import org.slf4j.MDC.put
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
@@ -437,27 +427,6 @@ class MessageComposerPresenter @Inject constructor(
                     showAttachmentSourcePicker = false
                     showVoiceChatScreen = true
                 }
-                MessageComposerEvents.VoiceChat.Start -> {
-                    Timber.v("Voice chat Started")
-                    val permissionGranted=micPermissionState.permissionGranted
-                    when {
-                        permissionGranted -> {
-                            localCoroutineScope.startRecording(object : SpeechRecognitionListener {
-                                override fun onTextRecognized(recognizedText: String) {
-                                    sendMessageToRoom(room, recognizedText)
-
-                                }
-                                override fun onError(error: Int) {
-
-                                }
-                            })
-                        }
-                        else -> {
-                            Timber.i("Microphone permission needed")
-                            micPermissionState.eventSink(PermissionsEvents.RequestPermissions)
-                        }
-                    }
-                }
                 MessageComposerEvents.VoiceChat.Dismiss -> {
                     Timber.v("Voice chat dismissed")
                     showVoiceChatScreen = false
@@ -555,45 +524,6 @@ class MessageComposerPresenter @Inject constructor(
                     attachmentState = attachmentState,
                 )
             }
-        }
-    }
-
-    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                room.sendMessage("Init from homepage...", "<p>${recognizedText}</p>", emptyList())
-                val currentUserId = room.sessionId
-                val currentRoomId = room.roomId
-                val messageEventId = waitForEventId("<p>${recognizedText}</p>")
-
-                Log.d("ControllerDebugging", "messageEventId: $messageEventId")
-
-                val payload = JSONObject().apply {
-                    put("eventId", messageEventId)
-                    put("user_id", currentUserId)
-                }
-                val botApiUrl = AuthenticationConfig.BOT_API_URL+"/stream_audio/$currentRoomId"
-                val zebraStream = BotStream()
-                zebraStream.sendVoiceChatPostRequest(botApiUrl, payload).collect { response ->
-                    Log.d("BotStreamDebugging", "Received: $response")
-                }
-            } catch (e: Exception) {
-                Log.d("ComposerDebugging", e.message.toString())
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private suspend fun waitForEventId(formattedBody: String): String? {
-        return withTimeoutOrNull(5000L) {
-            var eventId: String? = null
-            while (eventId == null) {
-                eventId = timelineController.getEventIdFromFormattedBody(formattedBody)
-                if (eventId == null) {
-                    delay(500)
-                }
-            }
-            eventId
         }
     }
 
