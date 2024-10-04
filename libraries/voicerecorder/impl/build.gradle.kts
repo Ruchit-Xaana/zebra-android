@@ -26,7 +26,7 @@ dependencies {
     implementation(projects.libraries.matrix.api)
     implementation(projects.libraries.core)
     implementation(projects.libraries.di)
-
+    implementation(libs.androidx.media3.exoplayer.v111)
     implementation(libs.androidx.annotationjvm)
     implementation(libs.coroutines.core)
 

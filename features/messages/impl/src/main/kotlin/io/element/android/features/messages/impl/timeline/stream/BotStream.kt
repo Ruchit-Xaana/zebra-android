@@ -7,7 +7,9 @@
 
 package io.element.android.features.messages.impl.timeline.stream
 
+import android.content.Context
 import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.text.Spannable
 import android.text.SpannableString
@@ -15,6 +17,7 @@ import android.text.Spanned
 import android.text.style.URLSpan
 import android.text.util.Linkify
 import android.util.Log
+import androidx.core.content.getSystemService
 import androidx.core.text.HtmlCompat
 import androidx.core.text.getSpans
 import androidx.core.text.util.LinkifyCompat
@@ -39,13 +42,6 @@ import java.util.LinkedList
 import java.util.Queue
 import java.util.concurrent.TimeUnit
 
-interface AudioChunkListener {
-    fun onAudioChunkReceived(audioData: ByteArray)
-}
-
-
-
-
 class BotStream {
     private val client: OkHttpClient =
         OkHttpClient.Builder().connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS).protocols(
@@ -59,12 +55,8 @@ class BotStream {
     private val audioQueue: Queue<String> = LinkedList()
     private var mediaPlayer: MediaPlayer? = null
     private var isStreamEnded = false
-    private var audioChunkListener: AudioChunkListener? = null
-
-    fun setAudioChunkListener(listener: AudioChunkListener) {
-        this.audioChunkListener = listener
-    }
-
+    private var audioFocusRequest: AudioFocusRequest? = null
+    private var isAudioFocusGranted = false
 
     companion object {
         private val functionMutex = Mutex()
@@ -204,7 +196,6 @@ class BotStream {
     fun processJsonStream(reader: BufferedReader,onJsonObjectReceived: (JSONObject) -> Unit) {
         val partialChunk = StringBuilder()
 
-
         try {
             var line: String?
 
@@ -301,7 +292,6 @@ class BotStream {
             Log.e("playbackAudio", "Error starting media player: ${e.message}")
         }
     }
-
 }
 
 

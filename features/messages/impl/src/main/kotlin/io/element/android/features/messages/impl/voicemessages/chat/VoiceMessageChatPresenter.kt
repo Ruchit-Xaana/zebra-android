@@ -16,7 +16,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import io.element.android.appconfig.AuthenticationConfig.BOT_API_URL
 import io.element.android.features.messages.impl.timeline.TimelineController
-import io.element.android.features.messages.impl.timeline.stream.BotStream
+import io.element.android.features.messages.impl.timeline.stream.VoiceBotStream
 import io.element.android.features.messages.impl.voicemessages.VoiceMessageException
 import io.element.android.libraries.architecture.Presenter
 import io.element.android.libraries.di.RoomScope
@@ -25,6 +25,7 @@ import io.element.android.libraries.matrix.api.room.MatrixRoom
 import io.element.android.libraries.permissions.api.PermissionsEvents
 import io.element.android.libraries.permissions.api.PermissionsPresenter
 import io.element.android.libraries.voicerecorder.api.SpeechRecognitionListener
+import io.element.android.libraries.voicerecorder.impl.DefaultAudioPlayer
 import io.element.android.libraries.voicerecorder.impl.DefaultAudioRecorder
 import io.element.android.services.analytics.api.AnalyticsService
 import kotlinx.coroutines.CoroutineScope
@@ -43,8 +44,10 @@ class VoiceMessageChatPresenter @Inject constructor(
     permissionsPresenterFactory: PermissionsPresenter.Factory,
     private val timelineController: TimelineController,
     private val audioRecorder: DefaultAudioRecorder,
+    private val audioSpeaker : DefaultAudioPlayer
 ) : Presenter<VoiceMessageChatState> {
     private val micPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.RECORD_AUDIO)
+
 
     @Composable
     override fun present(): VoiceMessageChatState {
@@ -120,7 +123,7 @@ class VoiceMessageChatPresenter @Inject constructor(
                         put("user_id", currentUserId)
                     }
                     val botApiUrl = "$BOT_API_URL/stream_audio/$currentRoomId"
-                    val zebraStream = BotStream()
+                    val zebraStream = VoiceBotStream(audioSpeaker)
                     zebraStream.startJsonStream(botApiUrl, payload)
                 }
             } catch (e: Exception) {
