@@ -9,7 +9,6 @@ package io.element.android.features.messages.impl.timeline.stream
 
 import android.util.Base64
 import android.util.Log
-import androidx.activity.result.launch
 import io.element.android.libraries.voicerecorder.impl.DefaultAudioPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +23,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okio.IOException
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -49,6 +49,7 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
             .post(requestBody)
             .build()
 
+        Log.d("BotStream", "Sending Request")
         streamingClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.e("BotStream", "Failed request")
@@ -78,31 +79,35 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
 
     // Function to process the JSON stream
     fun processJsonStream(reader: BufferedReader, onJsonObjectReceived: (JSONObject) -> Unit) {
+        val buffer = CharArray(1024) // Adjust buffer size as needed
         val partialChunk = StringBuilder()
-
         try {
-            var line: String?
+            var bytesRead: Int
 
-            // Read each line as soon as it's available without waiting for all lines
-            while (reader.readLine().also { line = it } != null) {
-                Log.e("BotStream", "Got Line: ${line}")
-                partialChunk.append(line)
+            while (reader.read(buffer, 0, buffer.size).also { bytesRead = it } != -1) {
+                val data = String(buffer, 0, bytesRead)
+                partialChunk.append(data)
 
-                // Optional: Handle boundary between JSON objects (e.g., "}{")
-                var boundaryIndex: Int
-                while (partialChunk.indexOf("}{").also { boundaryIndex = it } != -1) {
-                    val jsonChunk = partialChunk.substring(0, boundaryIndex + 1)
-                    partialChunk.delete(0, boundaryIndex + 1)
+                // Attempt to parse complete JSON objects
+                var jsonStartIndex = 0
+                var jsonEndIndex = partialChunk.indexOf("}")
+                while (jsonEndIndex != -1) {
+                    val jsonChunk = partialChunk.substring(jsonStartIndex, jsonEndIndex + 1)
 
-                    // Parse JSON chunk
                     try {
                         val jsonObject = JSONObject(jsonChunk)
-                        Log.d("BotStream", "Sent chunk")
-                        // Process the JSON object (e.g., "audio", "text", etc.)
                         onJsonObjectReceived(jsonObject)
-                    } catch (e: Exception) {
-                        Log.d("BotStream", "JSON error ${e.message}")// Handle JSON parsing error
+                    } catch (e: JSONException) {
+                        // Handle JSON parsing error (likely incomplete object)
+                        Log.d("BotStream", "JSON error: ${e.message}")
                     }
+
+                    jsonStartIndex = jsonEndIndex + 1
+                    jsonEndIndex = partialChunk.indexOf("}", jsonStartIndex)
+                }
+                // Remove processed chunks
+                if (jsonStartIndex > 0) {
+                    partialChunk.delete(0, jsonStartIndex)
                 }
             }
 
