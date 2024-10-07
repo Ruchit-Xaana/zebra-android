@@ -18,6 +18,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import io.element.android.libraries.di.ApplicationContext
 import io.element.android.libraries.di.RoomScope
 import io.element.android.libraries.di.SingleIn
+import io.element.android.libraries.voicerecorder.api.AudioPlaybackListener
 import java.util.LinkedList
 import java.util.Queue
 import javax.inject.Inject
@@ -29,6 +30,7 @@ class DefaultAudioPlayer @OptIn(UnstableApi::class)
     private lateinit var exoPlayer: ExoPlayer
     private val audioQueue: Queue<ByteArray> = LinkedList()
     private var chunkNumber =1
+    var playbackCallback: AudioPlaybackListener? = null
 
     init {
         initializeExoPlayer()
@@ -42,6 +44,13 @@ class DefaultAudioPlayer @OptIn(UnstableApi::class)
                     } else {
                         Log.d("AudioPlayerDEF", "Queue is empty, stopping playback.")
                         exoPlayer.stop()
+                        playbackCallback?.onPlaybackCompleted()
+                    }
+                }
+                else{
+                    if(playbackState == Player.STATE_READY&&exoPlayer.playWhenReady){
+                        Log.d("AudioPlayerDEF", "Now Playing")
+                        playbackCallback?.onPlaying()
                     }
                 }
             }

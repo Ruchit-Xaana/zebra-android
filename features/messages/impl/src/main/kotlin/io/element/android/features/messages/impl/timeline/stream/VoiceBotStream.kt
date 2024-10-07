@@ -9,6 +9,7 @@ package io.element.android.features.messages.impl.timeline.stream
 
 import android.util.Base64
 import android.util.Log
+import io.element.android.libraries.voicerecorder.api.AudioPlaybackListener
 import io.element.android.libraries.voicerecorder.impl.DefaultAudioPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,9 +39,11 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
     /**
      * Experimental
      */
-    fun startJsonStream(url: String, payload: JSONObject) {
+    fun startJsonStream(url: String, payload: JSONObject, callback: AudioPlaybackListener) {
         val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody: RequestBody = payload.toString().toRequestBody(mediaType)
+
+        audioSpeaker.playbackCallback = callback
 
         val request = Request.Builder()
             .addHeader("content-type", "application/json")

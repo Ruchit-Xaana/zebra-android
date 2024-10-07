@@ -8,6 +8,7 @@
 package io.element.android.features.messages.impl.voicemessages.chat
 
 import android.Manifest
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import io.element.android.libraries.di.SingleIn
 import io.element.android.libraries.matrix.api.room.MatrixRoom
 import io.element.android.libraries.permissions.api.PermissionsEvents
 import io.element.android.libraries.permissions.api.PermissionsPresenter
+import io.element.android.libraries.voicerecorder.api.AudioPlaybackListener
 import io.element.android.libraries.voicerecorder.api.SpeechRecognitionListener
 import io.element.android.libraries.voicerecorder.impl.DefaultAudioPlayer
 import io.element.android.libraries.voicerecorder.impl.DefaultAudioRecorder
@@ -65,7 +67,9 @@ class VoiceMessageChatPresenter @Inject constructor(
                             localCoroutineScope.startRecording(object : SpeechRecognitionListener {
                                 override fun onTextRecognized(recognizedText: String) {
                                     enableRecording = false
-                                    sendMessageToRoom(room, recognizedText)
+                                    sendMessageToRoom(room, recognizedText){flag ->
+                                        enableRecording = flag
+                                    }
                                 }
 
                                 override fun onError(error: Int) {
@@ -109,7 +113,7 @@ class VoiceMessageChatPresenter @Inject constructor(
         }
     }
 
-    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String) {
+    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String,onPlaybackCompleted: (flag:Boolean) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 room.sendMessage("Init from homepage...", "<p>${recognizedText}</p>", emptyList())
@@ -124,7 +128,21 @@ class VoiceMessageChatPresenter @Inject constructor(
                     }
                     val botApiUrl = "$BOT_API_URL/stream_audio/$currentRoomId"
                     val zebraStream = VoiceBotStream(audioSpeaker)
-                    zebraStream.startJsonStream(botApiUrl, payload)
+                    zebraStream.startJsonStream(botApiUrl, payload,object : AudioPlaybackListener {
+                        override fun onPlaying() {
+                            onPlaybackCompleted(false)
+                        }
+
+                        override fun onPlaybackCompleted() {
+                            Log.d("BotStream","Playback completed in voice message presenter")
+                            onPlaybackCompleted(true)
+                        }
+
+                        override fun onPlaybackError(errorMessage: String) {
+                            Log.d("BotStream","Error Got in voice message presenter")
+                            onPlaybackCompleted(true)
+                        }
+                    })
                 }
             } catch (e: Exception) {
                 Timber.e(e.message)

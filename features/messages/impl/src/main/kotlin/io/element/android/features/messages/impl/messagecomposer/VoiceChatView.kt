@@ -8,15 +8,25 @@
 package io.element.android.features.messages.impl.messagecomposer
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,13 +35,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import io.element.android.compound.theme.ElementTheme
+import io.element.android.features.messages.impl.R
 import io.element.android.features.messages.impl.voicemessages.chat.VoiceChatEvents
 import io.element.android.features.messages.impl.voicemessages.chat.VoiceMessageChatState
 import io.element.android.libraries.androidutils.ui.hideKeyboard
-
 import io.element.android.libraries.designsystem.theme.components.Text
 
 @Composable
@@ -79,47 +92,84 @@ private fun VoiceChatScreen(
     composerState: MessageComposerState,
     enableButton : Boolean
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Voice Chat",
-            style = ElementTheme.typography.fontHeadingLgBold,
-            modifier = Modifier.padding(bottom = 16.dp)
+        Image(
+            painter = painterResource(id = R.drawable.background_chat),
+            contentDescription = "Background Image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
-        Text(
-            text = "Transcription will appear here...",
-            style = ElementTheme.typography.fontBodyLgRegular,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(30.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(
-                enabled = enableButton,
-                onClick = { state.eventSink(VoiceChatEvents.Start) },
-                colors = ButtonDefaults.buttonColors(),
-                modifier = Modifier.weight(1f)
+            Spacer(modifier = Modifier.weight(0.2f))
+            Text(
+                text = "Voice Chat",
+                style = ElementTheme.typography.fontHeadingLgBold,
+                modifier = Modifier.padding(bottom = 16.dp).weight(0.2f)
             )
-            {
-                Text(text = "Start")
-            }
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally).padding(bottom = 30.dp),
+                horizontalArrangement = Arrangement.spacedBy(80.dp, Alignment.End) ,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FloatingActionButton(
+                    onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Start) },
+                    backgroundColor = if (!enableButton) {
+                        ElementTheme.colors.iconDisabled
+                    } else{
+                            MaterialTheme.colors.secondary
+                          },
+                    modifier = Modifier.size(80.dp),
+                    shape = RoundedCornerShape(100)
+                )
+                {
+                    if (enableButton) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            modifier = Modifier.size(40.dp),
+                            contentDescription = "Start chat",
+                            tint = ElementTheme.colors.iconPrimary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.MicOff,
+                            modifier = Modifier.size(40.dp),
+                            contentDescription = "Stop chat",
+                            tint = Color.Red
+                        )
+                    }
+                }
 
-            Button(
-                enabled = enableButton,
-                onClick = { composerState.eventSink(MessageComposerEvents.VoiceChat.Dismiss) },
-                colors = ButtonDefaults.buttonColors(),
-                modifier = Modifier.weight(1f)
-            )
-            {
-                Text(text = "Dismiss")
+                FloatingActionButton(
+                    onClick = { if (enableButton) composerState.eventSink(MessageComposerEvents.VoiceChat.Dismiss) },
+                    modifier = Modifier.size(60.dp),
+                    backgroundColor = if (enableButton) {
+                        ElementTheme.colors.iconPrimary
+                    } else {
+                        ElementTheme.colors.iconDisabled
+                    },
+                    elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                    shape = RoundedCornerShape(100)
+                )
+                {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Dismiss",
+                        tint = ElementTheme.materialColors.secondary
+                    )
+                }
             }
+            Spacer(modifier = Modifier.weight(0.2f))
+
         }
-
     }
 }
