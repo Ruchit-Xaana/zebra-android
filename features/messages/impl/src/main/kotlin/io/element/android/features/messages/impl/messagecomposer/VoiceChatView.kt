@@ -82,7 +82,8 @@ internal fun VoiceChatView(
        VoiceChatScreen(
            state = state,
            composerState = composerState,
-           enableButton = enableButton
+           enableButton = enableButton,
+           audioSessionId = state.audioSessionId
        )
     }
 }
@@ -90,7 +91,8 @@ internal fun VoiceChatView(
 private fun VoiceChatScreen(
     state: VoiceMessageChatState,
     composerState: MessageComposerState,
-    enableButton : Boolean
+    enableButton : Boolean,
+    audioSessionId: Int?
 ) {
     Box(
         modifier = Modifier
@@ -113,9 +115,21 @@ private fun VoiceChatScreen(
             Text(
                 text = "Voice Chat",
                 style = ElementTheme.typography.fontHeadingLgBold,
-                modifier = Modifier.padding(bottom = 16.dp).weight(0.2f)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
-            Spacer(modifier = Modifier.weight(1f))
+            if (audioSessionId != null && audioSessionId != -1) {
+                // Set a specific size for the visualizer
+                AudioVisualizerView(
+                    audioSessionId = audioSessionId,
+                    modifier = Modifier
+                        .weight(0.55f) // Adjust the size as needed
+                        .padding(bottom = 20.dp) // Add some spacing
+                )
+            }
+            else{
+                Spacer(modifier = Modifier.weight(0.55f))
+            }
+            Spacer(modifier = Modifier.weight(0.15f))
             Row(
                 modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally).padding(bottom = 30.dp),
                 horizontalArrangement = Arrangement.spacedBy(80.dp, Alignment.End) ,
@@ -168,7 +182,7 @@ private fun VoiceChatScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.weight(0.2f))
+            Spacer(modifier = Modifier.weight(0.1f))
 
         }
     }

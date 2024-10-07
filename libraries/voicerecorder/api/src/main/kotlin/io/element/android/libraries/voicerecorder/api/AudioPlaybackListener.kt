@@ -8,7 +8,7 @@
 package io.element.android.libraries.voicerecorder.api
 
 interface AudioPlaybackListener {
-    fun onPlaying()
+    fun onPlaying(audioSessionId: Int)
     fun onPlaybackCompleted()
     fun onPlaybackError(errorMessage: String)
 }

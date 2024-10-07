@@ -162,6 +162,7 @@ fun aVoiceChatState(
 ) = VoiceMessageChatState(
     enableRecording = true,
     eventSink = eventSink,
+    audioSessionId = null,
 )
 
 fun aReactionSummaryState(

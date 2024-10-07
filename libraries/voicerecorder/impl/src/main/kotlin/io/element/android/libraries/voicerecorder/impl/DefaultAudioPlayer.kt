@@ -50,7 +50,7 @@ class DefaultAudioPlayer @OptIn(UnstableApi::class)
                 else{
                     if(playbackState == Player.STATE_READY&&exoPlayer.playWhenReady){
                         Log.d("AudioPlayerDEF", "Now Playing")
-                        playbackCallback?.onPlaying()
+                        playbackCallback?.onPlaying(exoPlayer.audioSessionId)
                     }
                 }
             }

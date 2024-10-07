@@ -56,6 +56,7 @@ class VoiceMessageChatPresenter @Inject constructor(
         val localCoroutineScope = rememberCoroutineScope()
         val micPermissionState = micPermissionPresenter.present()
         var enableRecording: Boolean by remember { mutableStateOf(true) }
+        var audioSessionId: Int? by remember { mutableStateOf(null) }
 
         fun handleEvents(event: VoiceChatEvents) {
             when (event) {
@@ -67,8 +68,11 @@ class VoiceMessageChatPresenter @Inject constructor(
                             localCoroutineScope.startRecording(object : SpeechRecognitionListener {
                                 override fun onTextRecognized(recognizedText: String) {
                                     enableRecording = false
-                                    sendMessageToRoom(room, recognizedText){flag ->
+                                    sendMessageToRoom(room, recognizedText){flag, newAudioSessionId ->
                                         enableRecording = flag
+                                        if (newAudioSessionId != null) {
+                                            audioSessionId = newAudioSessionId
+                                        }
                                     }
                                 }
 
@@ -87,6 +91,7 @@ class VoiceMessageChatPresenter @Inject constructor(
         }
         return VoiceMessageChatState(
             enableRecording = enableRecording,
+            audioSessionId = audioSessionId,
             eventSink = { handleEvents(it) },
         )
     }
@@ -113,7 +118,7 @@ class VoiceMessageChatPresenter @Inject constructor(
         }
     }
 
-    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String,onPlaybackCompleted: (flag:Boolean) -> Unit) {
+    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String,onPlaybackCompleted: (flag:Boolean, audioSessionId: Int?) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 room.sendMessage("Init from homepage...", "<p>${recognizedText}</p>", emptyList())
@@ -129,18 +134,18 @@ class VoiceMessageChatPresenter @Inject constructor(
                     val botApiUrl = "$BOT_API_URL/stream_audio/$currentRoomId"
                     val zebraStream = VoiceBotStream(audioSpeaker)
                     zebraStream.startJsonStream(botApiUrl, payload,object : AudioPlaybackListener {
-                        override fun onPlaying() {
-                            onPlaybackCompleted(false)
+                        override fun onPlaying(audioSessionId: Int) {
+                            onPlaybackCompleted(false,audioSessionId)
                         }
 
                         override fun onPlaybackCompleted() {
                             Log.d("BotStream","Playback completed in voice message presenter")
-                            onPlaybackCompleted(true)
+                            onPlaybackCompleted(true,null)
                         }
 
                         override fun onPlaybackError(errorMessage: String) {
                             Log.d("BotStream","Error Got in voice message presenter")
-                            onPlaybackCompleted(true)
+                            onPlaybackCompleted(true,null)
                         }
                     })
                 }
