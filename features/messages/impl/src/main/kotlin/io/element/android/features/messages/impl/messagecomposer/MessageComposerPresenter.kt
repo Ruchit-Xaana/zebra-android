@@ -406,6 +406,10 @@ class MessageComposerPresenter @Inject constructor(
                     when {
                         permissionGranted -> {
                             localCoroutineScope.startRecording(object : SpeechRecognitionListener {
+                                override fun onReadyForSpeech() {
+                                    Timber.d("Ready for speech")
+                                }
+
                                 override fun onTextRecognized(recognizedText: String) {
                                     showAttachmentSourcePicker = false
                                     markdownTextEditorState.text.update(recognizedText, true)
@@ -413,6 +417,14 @@ class MessageComposerPresenter @Inject constructor(
                                 override fun onError(error: Int) {
                                     showAttachmentSourcePicker = false
                                     markdownTextEditorState.text.update("Error converting speech to text : Code $error", true)
+                                }
+
+                                override fun onRmsChanged(rmsDB: Float) {
+                                    Timber.d("RMS changed to $rmsDB")
+                                }
+
+                                override fun onEndOfSpeech() {
+                                    Timber.d("End of speech")
                                 }
                             })
                         }
@@ -530,6 +542,10 @@ class MessageComposerPresenter @Inject constructor(
     private fun CoroutineScope.startRecording(callback: SpeechRecognitionListener) = launch {
         try {
             audioRecorder.startRecording(object : SpeechRecognitionListener {
+                override fun onReadyForSpeech() {
+                    callback.onReadyForSpeech()
+                }
+
                 override fun onTextRecognized(recognizedText: String) {
                     // Handle the recognized text here
                     callback.onTextRecognized(recognizedText)
@@ -541,6 +557,14 @@ class MessageComposerPresenter @Inject constructor(
                     callback.onError(error)
                     Timber.e("Speech recognition error: $error")
                     audioRecorder.stopRecording()
+                }
+
+                override fun onRmsChanged(rmsDB: Float) {
+                    callback.onRmsChanged(rmsDB)
+                }
+
+                override fun onEndOfSpeech() {
+                    callback.onEndOfSpeech()
                 }
             })
         } catch (e: SecurityException) {

@@ -9,6 +9,8 @@ package io.element.android.features.messages.impl.messagecomposer
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,7 +85,8 @@ internal fun VoiceChatView(
            state = state,
            composerState = composerState,
            enableButton = enableButton,
-           audioSessionId = state.audioSessionId
+           audioSessionId = state.audioSessionId,
+           rmsDB = state.rmsDB
        )
     }
 }
@@ -92,7 +95,8 @@ private fun VoiceChatScreen(
     state: VoiceMessageChatState,
     composerState: MessageComposerState,
     enableButton : Boolean,
-    audioSessionId: Int?
+    audioSessionId: Int?,
+    rmsDB: Float?
 ) {
     Box(
         modifier = Modifier
@@ -117,19 +121,31 @@ private fun VoiceChatScreen(
                 style = ElementTheme.typography.fontHeadingLgBold,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            if (audioSessionId != null && audioSessionId != -1) {
                 // Set a specific size for the visualizer
                 AudioVisualizerView(
+                    rmsDB = rmsDB,
                     audioSessionId = audioSessionId,
                     modifier = Modifier
                         .weight(0.55f) // Adjust the size as needed
                         .padding(bottom = 20.dp) // Add some spacing
                 )
-            }
-            else{
-                Spacer(modifier = Modifier.weight(0.55f))
-            }
+
             Spacer(modifier = Modifier.weight(0.15f))
+            if (state.isReady) {
+                Text(
+                    text = "Speak now...",
+                    style = ElementTheme.typography.fontBodyLgRegular,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .border(2.dp, Color.Green, RoundedCornerShape(8.dp)) // Green border to grab attention
+                        .background(
+                            color = Color(0xAAFFFFFF), // Semi-transparent black background
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
             Row(
                 modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally).padding(bottom = 30.dp),
                 horizontalArrangement = Arrangement.spacedBy(80.dp, Alignment.End) ,

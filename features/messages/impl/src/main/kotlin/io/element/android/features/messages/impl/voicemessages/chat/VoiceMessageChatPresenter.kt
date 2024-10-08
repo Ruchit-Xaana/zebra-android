@@ -57,6 +57,8 @@ class VoiceMessageChatPresenter @Inject constructor(
         val micPermissionState = micPermissionPresenter.present()
         var enableRecording: Boolean by remember { mutableStateOf(true) }
         var audioSessionId: Int? by remember { mutableStateOf(null) }
+        var rmsDB: Float? by remember { mutableStateOf(null) }
+        var isReady: Boolean by remember { mutableStateOf(false) }
 
         fun handleEvents(event: VoiceChatEvents) {
             when (event) {
@@ -66,8 +68,18 @@ class VoiceMessageChatPresenter @Inject constructor(
                     when {
                         permissionGranted -> {
                             localCoroutineScope.startRecording(object : SpeechRecognitionListener {
+
+                                override fun onRmsChanged(rmsdBValue: Float) {
+                                    rmsDB = rmsdBValue
+                                }
+
+                                override fun onReadyForSpeech() {
+                                    isReady = true  // Speech input started, show "Speak now" message
+                                }
+
                                 override fun onTextRecognized(recognizedText: String) {
                                     enableRecording = false
+                                    isReady = false
                                     sendMessageToRoom(room, recognizedText){flag, newAudioSessionId ->
                                         enableRecording = flag
                                         if (newAudioSessionId != null) {
@@ -75,9 +87,12 @@ class VoiceMessageChatPresenter @Inject constructor(
                                         }
                                     }
                                 }
-
+                                override fun onEndOfSpeech() {
+                                    isReady = false  // Speech input ended, hide "Speak now" message
+                                }
                                 override fun onError(error: Int) {
-                                    enableRecording = false
+                                    enableRecording = true
+                                    isReady = false
                                 }
                             })
                         }
@@ -92,6 +107,8 @@ class VoiceMessageChatPresenter @Inject constructor(
         return VoiceMessageChatState(
             enableRecording = enableRecording,
             audioSessionId = audioSessionId,
+            rmsDB = rmsDB,
+            isReady = isReady,
             eventSink = { handleEvents(it) },
         )
     }
@@ -99,6 +116,9 @@ class VoiceMessageChatPresenter @Inject constructor(
     private fun CoroutineScope.startRecording(callback: SpeechRecognitionListener) = launch {
         try {
             audioRecorder.startRecording(object : SpeechRecognitionListener {
+                override fun onReadyForSpeech() {
+                    callback.onReadyForSpeech()  // Send the RMS change to the callback
+                }
                 override fun onTextRecognized(recognizedText: String) {
                     // Handle the recognized text here
                     callback.onTextRecognized(recognizedText)
@@ -110,6 +130,14 @@ class VoiceMessageChatPresenter @Inject constructor(
                     callback.onError(error)
                     Timber.e("Speech recognition error: $error")
                     audioRecorder.stopRecording()
+                }
+
+                override fun onRmsChanged(rmsDB: Float) {
+                    callback.onRmsChanged(rmsDB)  // Send the RMS change to the callback
+                }
+
+                override fun onEndOfSpeech() {
+                    callback.onEndOfSpeech()
                 }
             })
         } catch (e: SecurityException) {

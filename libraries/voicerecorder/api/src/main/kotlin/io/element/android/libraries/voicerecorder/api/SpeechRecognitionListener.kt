@@ -8,6 +8,9 @@
 package io.element.android.libraries.voicerecorder.api
 
 interface SpeechRecognitionListener {
+    fun onReadyForSpeech()
     fun onTextRecognized(recognizedText: String)
     fun onError(error: Int)
+    fun onRmsChanged(rmsDB: Float)
+    fun onEndOfSpeech()
 }

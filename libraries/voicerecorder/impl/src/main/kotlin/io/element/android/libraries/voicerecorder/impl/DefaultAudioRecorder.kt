@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.util.Log
 import io.element.android.libraries.di.ApplicationContext
 import io.element.android.libraries.di.RoomScope
 import io.element.android.libraries.di.SingleIn
@@ -33,13 +32,17 @@ class DefaultAudioRecorder@Inject constructor(
         if(SpeechRecognizer.isRecognitionAvailable(context)){
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
             speechRecognizer.setRecognitionListener(object : RecognitionListener{
-                override fun onReadyForSpeech(params: Bundle?) {}
+                override fun onReadyForSpeech(params: Bundle?) {
+                    listener.onReadyForSpeech()
+                }
                 override fun onBeginningOfSpeech() {}
                 override fun onRmsChanged(rmsdB: Float) {
-                    Log.d("AudioRecorder", "RMS: $rmsdB")
+                    listener.onRmsChanged(rmsdB)
                 }
                 override fun onBufferReceived(buffer: ByteArray?) {}
-                override fun onEndOfSpeech() {}
+                override fun onEndOfSpeech() {
+                    listener.onEndOfSpeech()
+                }
                 override fun onError(error: Int) {
                     //Handle error and send message
                     listener.onError(error)

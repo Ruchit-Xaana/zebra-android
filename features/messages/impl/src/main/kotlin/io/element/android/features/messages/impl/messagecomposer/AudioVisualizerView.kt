@@ -24,34 +24,36 @@ import kotlin.math.sin
 
 @Composable
 fun AudioVisualizerView(
-    audioSessionId: Int,
+    rmsDB: Float?,
+    audioSessionId: Int?,
     modifier: Modifier = Modifier
 ) {
-    val visualizer = remember { Visualizer(audioSessionId) }
+    val visualizer = remember(audioSessionId) { audioSessionId?.let { Visualizer(it) } }
     val fftData = remember { mutableStateOf(ByteArray(Visualizer.getCaptureSizeRange()[1])) }
     val barCount = 64 // Number of bars in the circular graph
 
     DisposableEffect(visualizer) {
-        visualizer.setCaptureSize(fftData.value.size)
-        visualizer.setDataCaptureListener(
-            object : Visualizer.OnDataCaptureListener {
-                override fun onWaveFormDataCapture(visualizer: Visualizer, waveform: ByteArray, samplingRate: Int) {
-                    // Not used in this example
-                }
-                override fun onFftDataCapture(visualizer: Visualizer, fft: ByteArray, samplingRate: Int) {
-                    fft.copyInto(fftData.value)
-                    //Log.d("AudioVisualizer", "$ FFT data captured: ${fftData.value.joinToString(", ")}")
-                    fftData.value = fft.copyOf()
-                }
-            },
-            Visualizer.getMaxCaptureRate() / 2,
-            false,
-            true
-        )
-        visualizer.enabled = true
+        visualizer?.let {
+            it.setCaptureSize(fftData.value.size)
+            it.setDataCaptureListener(
+                object : Visualizer.OnDataCaptureListener {
+                    override fun onWaveFormDataCapture(visualizer: Visualizer, waveform: ByteArray, samplingRate: Int) {
+                        // Not used in this example
+                    }
+                    override fun onFftDataCapture(visualizer: Visualizer, fft: ByteArray, samplingRate: Int) {
+                        fft.copyInto(fftData.value)
+                        fftData.value = fft.copyOf()
+                    }
+                },
+                Visualizer.getMaxCaptureRate() / 2,
+                false,
+                true
+            )
+            it.enabled = true
+        }
         onDispose {
-            visualizer.enabled = false
-            visualizer.release()
+            visualizer?.enabled = false
+            visualizer?.release()
         }
     }
     Canvas(modifier = modifier.fillMaxSize()) {
@@ -62,8 +64,16 @@ fun AudioVisualizerView(
 
         for (i in 0 until barCount) {
             val angle = (i * 360f / barCount) * (Math.PI / 180f).toFloat() // Angle in radians
-            val barHeight =
-                fftData.value.getOrNull(i)?.toInt()?.coerceAtLeast(0)?.div(255f)?.times(outerRadius - innerRadius) ?: 0f // Normalize and scale bar height
+            val barHeight = when {
+                rmsDB != null && rmsDB > -2 -> {
+                    val normalizedRms = (rmsDB + 2f).coerceIn(0f, 10f) / 10f // Normalize RMS dB value
+                    normalizedRms * (outerRadius - innerRadius) // Scale it for visualizer
+                }
+                fftData.value.isNotEmpty() -> {
+                    fftData.value.getOrNull(i)?.toInt()?.coerceAtLeast(0)?.div(255f)?.times(outerRadius - innerRadius) ?: 0f
+                }
+                else -> 0f
+            }
 
             // Calculate bar start and end points
             val startX = centerX + cos(angle) * innerRadius
