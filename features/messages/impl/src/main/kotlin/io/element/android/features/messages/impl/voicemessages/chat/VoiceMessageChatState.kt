@@ -15,5 +15,6 @@ data class VoiceMessageChatState(
     val audioSessionId: Int?,
     val rmsDB: Float?,
     val isReady: Boolean,
+    val errorMessage: String?,
     val eventSink: (VoiceChatEvents) -> Unit,
 )

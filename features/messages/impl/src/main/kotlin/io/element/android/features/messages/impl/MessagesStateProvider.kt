@@ -164,6 +164,7 @@ fun aVoiceChatState(
     eventSink = eventSink,
     audioSessionId = null,
     isReady = false,
+    errorMessage = null,
     rmsDB = null,
 )
 

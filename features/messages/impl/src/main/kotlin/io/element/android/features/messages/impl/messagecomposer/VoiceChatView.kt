@@ -131,6 +131,21 @@ private fun VoiceChatScreen(
                 )
 
             Spacer(modifier = Modifier.weight(0.15f))
+            if (state.errorMessage!=null) {
+                Text(
+                    text = state.errorMessage,
+                    style = ElementTheme.typography.fontBodyLgRegular,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .border(2.dp, Color.Green, RoundedCornerShape(8.dp)) // Green border to grab attention
+                        .background(
+                            color = Color(0xAAFFFFFF), // Semi-transparent black background
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
             if (state.isReady) {
                 Text(
                     text = "Speak now...",

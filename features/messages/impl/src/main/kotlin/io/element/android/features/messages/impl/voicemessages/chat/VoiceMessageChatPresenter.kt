@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import io.element.android.appconfig.AuthenticationConfig.BOT_API_URL
 import io.element.android.features.messages.impl.timeline.TimelineController
 import io.element.android.features.messages.impl.timeline.stream.VoiceBotStream
+import io.element.android.features.messages.impl.timeline.stream.VoiceBotStreamListener
 import io.element.android.features.messages.impl.voicemessages.VoiceMessageException
 import io.element.android.libraries.architecture.Presenter
 import io.element.android.libraries.di.RoomScope
@@ -59,6 +60,7 @@ class VoiceMessageChatPresenter @Inject constructor(
         var audioSessionId: Int? by remember { mutableStateOf(null) }
         var rmsDB: Float? by remember { mutableStateOf(null) }
         var isReady: Boolean by remember { mutableStateOf(false) }
+        var error: String? by remember { mutableStateOf(null) }
 
         fun handleEvents(event: VoiceChatEvents) {
             when (event) {
@@ -74,13 +76,19 @@ class VoiceMessageChatPresenter @Inject constructor(
                                 }
 
                                 override fun onReadyForSpeech() {
-                                    isReady = true  // Speech input started, show "Speak now" message
+                                    isReady = true // Speech input started, show "Speak now" message
+                                    error = null
                                 }
 
                                 override fun onTextRecognized(recognizedText: String) {
                                     enableRecording = false
                                     isReady = false
-                                    sendMessageToRoom(room, recognizedText){flag, newAudioSessionId ->
+                                    sendMessageToRoom(room, recognizedText,object : VoiceBotStreamListener {
+                                        override fun onStreamError(errorMessage: String) {
+                                            error = errorMessage
+                                            enableRecording = true
+                                        }
+                                    }){ flag, newAudioSessionId ->
                                         enableRecording = flag
                                         if (newAudioSessionId != null) {
                                             audioSessionId = newAudioSessionId
@@ -108,6 +116,7 @@ class VoiceMessageChatPresenter @Inject constructor(
             enableRecording = enableRecording,
             audioSessionId = audioSessionId,
             rmsDB = rmsDB,
+            errorMessage = error,
             isReady = isReady,
             eventSink = { handleEvents(it) },
         )
@@ -146,7 +155,7 @@ class VoiceMessageChatPresenter @Inject constructor(
         }
     }
 
-    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String,onPlaybackCompleted: (flag:Boolean, audioSessionId: Int?) -> Unit) {
+    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String,streamListener: VoiceBotStreamListener,onPlaybackCompleted: (flag:Boolean, audioSessionId: Int?) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 room.sendMessage("Init from homepage...", "<p>${recognizedText}</p>", emptyList())
@@ -173,9 +182,10 @@ class VoiceMessageChatPresenter @Inject constructor(
 
                         override fun onPlaybackError(errorMessage: String) {
                             Log.d("BotStream","Error Got in voice message presenter")
+                            streamListener.onStreamError("Playback error: $errorMessage")
                             onPlaybackCompleted(true,null)
                         }
-                    })
+                    },streamListener)
                 }
             } catch (e: Exception) {
                 Timber.e(e.message)

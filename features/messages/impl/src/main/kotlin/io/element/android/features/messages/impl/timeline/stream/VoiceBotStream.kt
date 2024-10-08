@@ -39,7 +39,7 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
     /**
      * Experimental
      */
-    fun startJsonStream(url: String, payload: JSONObject, callback: AudioPlaybackListener) {
+    fun startJsonStream(url: String, payload: JSONObject, callback: AudioPlaybackListener,streamListener: VoiceBotStreamListener) {
         val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody: RequestBody = payload.toString().toRequestBody(mediaType)
 
@@ -56,6 +56,7 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
         streamingClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.e("BotStream", "Failed request")
+                streamListener.onStreamError("Failed request: ${e.message}")
                 e.printStackTrace()
             }
 
@@ -65,7 +66,7 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
                         // Create a reader for the stream
                         val reader = BufferedReader(InputStreamReader(responseBody.byteStream()))
                         Log.e("BotStream", "Created Reader")
-                        processJsonStream(reader){ jsonObject ->
+                        processJsonStream(reader,streamListener){ jsonObject ->
                             // Process the JSON object incrementally
                             processJsonObject(jsonObject)
                             Log.e("BotStream", "Sending to process")
@@ -75,13 +76,14 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
                 } else {
                     // Handle the error
                     Log.e("BotStream", "Unexpected code $response")
+                    streamListener.onStreamError("Unexpected response code: ${response.code}")
                 }
             }
         })
     }
 
     // Function to process the JSON stream
-    fun processJsonStream(reader: BufferedReader, onJsonObjectReceived: (JSONObject) -> Unit) {
+    fun processJsonStream(reader: BufferedReader,streamListener: VoiceBotStreamListener, onJsonObjectReceived: (JSONObject) -> Unit) {
         val buffer = CharArray(1024) // Adjust buffer size as needed
         val partialChunk = StringBuilder()
         try {
@@ -103,6 +105,7 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
                     } catch (e: JSONException) {
                         // Handle JSON parsing error (likely incomplete object)
                         Log.d("BotStream", "JSON error: ${e.message}")
+                        streamListener.onStreamError("JSON error: ${e.message}")
                     }
 
                     jsonStartIndex = jsonEndIndex + 1
@@ -122,10 +125,12 @@ class VoiceBotStream(private val audioSpeaker: DefaultAudioPlayer) {
                     onJsonObjectReceived(jsonObject)
                 } catch (e: Exception) {
                     Log.e("BotStream", "Partial chunk exception : ${e.message}")
+                    streamListener.onStreamError("Partial chunk exception : ${e.message}")
                 }
             }
         } catch (e: Exception) {
             Log.e("BotStream", "Process Json Stream Exception : ${e.message}")
+            streamListener.onStreamError("Process Json Stream Exception : ${e.message}")
         }
     }
 
