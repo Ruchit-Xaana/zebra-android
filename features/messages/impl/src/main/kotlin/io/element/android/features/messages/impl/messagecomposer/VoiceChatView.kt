@@ -26,11 +26,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -144,27 +142,18 @@ private fun VoiceChatScreen(
                     backgroundColor = if (!enableButton) {
                         ElementTheme.colors.iconDisabled
                     } else{
-                            MaterialTheme.colors.secondary
-                          },
+                        Color(0xFF4CAF50)
+                    },
                     modifier = Modifier.size(80.dp),
                     shape = RoundedCornerShape(100)
                 )
                 {
-                    if (enableButton) {
                         Icon(
-                            imageVector = Icons.Default.Mic,
+                            imageVector = Icons.Default.Call,
                             modifier = Modifier.size(40.dp),
-                            contentDescription = "Start chat",
+                            contentDescription = "Start Session",
                             tint = ElementTheme.colors.iconPrimary
                         )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.MicOff,
-                            modifier = Modifier.size(40.dp),
-                            contentDescription = "Stop chat",
-                            tint = Color.Red
-                        )
-                    }
                 }
 
                 FloatingActionButton(
@@ -176,9 +165,9 @@ private fun VoiceChatScreen(
                 )
                 {
                     Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Dismiss",
-                        tint = Color.Black
+                        imageVector = Icons.Default.CallEnd,
+                        contentDescription = "Dismiss Session",
+                        tint = ElementTheme.colors.iconPrimary
                     )
                 }
             }
