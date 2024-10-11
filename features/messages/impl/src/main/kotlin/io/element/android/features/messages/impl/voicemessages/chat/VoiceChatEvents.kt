@@ -8,7 +8,7 @@
 package io.element.android.features.messages.impl.voicemessages.chat
 
 interface VoiceChatEvents {
-    data object Start : VoiceChatEvents
+    data object Connect : VoiceChatEvents
     data object Stop : VoiceChatEvents
-    data object Exit : VoiceChatEvents
+    data object Disconnect : VoiceChatEvents
 }

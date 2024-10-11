@@ -8,7 +8,6 @@
 package io.element.android.features.messages.impl.voicemessages.chat
 
 import android.Manifest
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,12 +68,8 @@ class VoiceMessageChatPresenter @Inject constructor(
 
         fun handleEvents(event: VoiceChatEvents) {
             when (event) {
-                VoiceChatEvents.Exit -> {
-                    webSocket?.close(1000, "Normal Closure")
-                    webSocket=null
-                }
-                VoiceChatEvents.Start -> {
-                    Timber.v("Voice chat Started")
+                VoiceChatEvents.Connect -> {
+                    Timber.v("Beginning Voice chat session")
                     val permissionGranted = micPermissionState.permissionGranted
                     when {
                         permissionGranted -> {
@@ -93,6 +88,11 @@ class VoiceMessageChatPresenter @Inject constructor(
                             micPermissionState.eventSink(PermissionsEvents.RequestPermissions)
                         }
                     }
+                }
+                VoiceChatEvents.Disconnect -> {
+                    Timber.v("Exiting Voice chat session")
+                    webSocket?.close(1000, "Normal Closure")
+                    webSocket=null
                 }
                 VoiceChatEvents.Stop -> {
                     Timber.v("Voice chat Stopped")
@@ -132,12 +132,10 @@ class VoiceMessageChatPresenter @Inject constructor(
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 webSocket.close(1000, null)
-                Log.d("AudioTrack","WebSocket closing")
                 Timber.i("WebSocket closing: $code / $reason")
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                Log.d("AudioTrack","WebSocket closed")
                 Timber.i("WebSocket closed: $code / $reason")
             }
         })

@@ -168,7 +168,7 @@ private fun VoiceChatScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FloatingActionButton(
-                    onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Start) },
+                    onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Connect) },
                     backgroundColor = if (!enableButton) {
                         ElementTheme.colors.iconDisabled
                     } else{
@@ -214,7 +214,7 @@ private fun VoiceChatScreen(
                     )
                 }
                 FloatingActionButton(
-                    onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Exit) },
+                    onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Disconnect) },
                     modifier = Modifier.size(60.dp),
                     backgroundColor = if (enableButton) {
                         ElementTheme.colors.iconPrimary
