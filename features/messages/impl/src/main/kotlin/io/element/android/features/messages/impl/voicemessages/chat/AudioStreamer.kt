@@ -87,7 +87,14 @@ class AudioStreamer {
 
     fun stopRecording() {
         isRecording = false
+        setSilence = false
         audioRecord?.stop()
+        audioRecord?.release()
+        audioRecord = null
+        echoCanceler?.release()
+        echoCanceler = null
+        noiseSuppressor?.release()
+        noiseSuppressor = null
     }
     fun setMicSilence(isSilence: Boolean) {
         setSilence = isSilence

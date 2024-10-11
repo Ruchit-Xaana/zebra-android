@@ -25,7 +25,6 @@ import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
@@ -196,24 +195,6 @@ private fun VoiceChatScreen(
                 }
 
                 FloatingActionButton(
-                    onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Stop) },
-                    modifier = Modifier.size(60.dp),
-                    backgroundColor = if (enableButton) {
-                        ElementTheme.colors.iconPrimary
-                    } else {
-                        ElementTheme.colors.iconDisabled
-                    },
-                    elevation = FloatingActionButtonDefaults.elevation(8.dp),
-                    shape = RoundedCornerShape(100)
-                )
-                {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Dismiss",
-                        tint = ElementTheme.materialColors.secondary
-                    )
-                }
-                FloatingActionButton(
                     onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Disconnect) },
                     modifier = Modifier.size(60.dp),
                     backgroundColor = if (enableButton) {
@@ -226,7 +207,7 @@ private fun VoiceChatScreen(
                 )
                 {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.Default.Close,
                         contentDescription = "Dismiss",
                         tint = ElementTheme.materialColors.secondary
                     )

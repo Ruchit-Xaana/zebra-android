@@ -26,11 +26,8 @@ class AudioTrack(
     private val audioQueue: BlockingQueue<ByteArray> = LinkedBlockingQueue()
     private var isPlaying = false
 
-    init {
-        initAudioTrack()
-    }
 
-    private fun initAudioTrack() {
+    fun initAudioTrack() {
         minBufferSize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, audioFormat)*4
 
         val audioAttributes = AudioAttributes.Builder()
@@ -86,6 +83,8 @@ class AudioTrack(
         }
     }
     fun stopPlayback() {
+        isPlaying = false
+        audioQueue.clear()
         audioTrack?.stop()
         audioTrack?.release()
         audioTrack = null

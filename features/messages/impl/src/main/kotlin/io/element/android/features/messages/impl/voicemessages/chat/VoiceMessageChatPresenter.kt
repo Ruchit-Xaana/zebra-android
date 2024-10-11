@@ -44,7 +44,7 @@ class VoiceMessageChatPresenter @Inject constructor(
 ) : Presenter<VoiceMessageChatState> {
     private val micPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.RECORD_AUDIO)
     private var webSocket: WebSocket? = null
-    private var audioStreamer = AudioStreamer()
+    private val audioStreamer = AudioStreamer()
     private val audioTrack = AudioTrack(listener = object : AudioTrackPlaybackListener {
         override fun onAudioPlaying() {
             audioStreamer.setMicSilence(true)
@@ -76,6 +76,7 @@ class VoiceMessageChatPresenter @Inject constructor(
                             try{
                                 webSocket=connectWebSocket()
                                 audioStreamer.initAudioRecord()
+                                audioTrack.initAudioTrack()
                                 audioStreamer.startRecording(webSocket!!)
                             }
                             catch (e:SecurityException){
@@ -93,9 +94,8 @@ class VoiceMessageChatPresenter @Inject constructor(
                     Timber.v("Exiting Voice chat session")
                     webSocket?.close(1000, "Normal Closure")
                     webSocket=null
-                }
-                VoiceChatEvents.Stop -> {
-                    Timber.v("Voice chat Stopped")
+                    Timber.v("Mic stop recording")
+                    audioTrack.stopPlayback()
                     audioStreamer.stopRecording()
                 }
             }
