@@ -48,12 +48,10 @@ class VoiceMessageChatPresenter @Inject constructor(
     private var audioStreamer = AudioStreamer()
     private val audioTrack = AudioTrack(listener = object : AudioTrackPlaybackListener {
         override fun onAudioPlaying() {
-            Log.d("AudioTrack","Audio is playing")
             audioStreamer.setMicSilence(true)
         }
 
         override fun onSilenceDetected() {
-            Log.d("AudioTrack","Silence detected")
             audioStreamer.setMicSilence(false)
         }
     })
@@ -114,7 +112,7 @@ class VoiceMessageChatPresenter @Inject constructor(
     private fun connectWebSocket():WebSocket {
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("ws://127.0.0.1:8888/ws/audio")
+            .url("ws://3.106.211.173:32340/ws/audio")
             .build()
 
         Timber.d("Connecting to WebSocket")
