@@ -13,6 +13,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.NoiseSuppressor
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import io.element.android.libraries.di.RoomScope
 import io.element.android.libraries.di.SingleIn
@@ -34,7 +35,7 @@ class AudioStreamer {
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun initAudioRecord() {
         audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+            MediaRecorder.AudioSource.MIC,
             sampleRate,
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT,
@@ -69,14 +70,18 @@ class AudioStreamer {
                 val buffer = ByteArray(bufferSize)
                 while (isRecording) {
                     if(setSilence){
+                        Log.d("AudioStreamer","Sending silence")
                         val silenceChunk = ByteArray(bufferSize)
-                        webSocket.send(silenceChunk.toByteString(0, silenceChunk.size))
+                        val silenceFlag =webSocket.send(silenceChunk.toByteString(0, silenceChunk.size))
+                        Log.d("Flag","Silence ${silenceFlag}")
                     }
                     else {
+                        Log.d("AudioStreamer","Sending audio")
                         val readSize = audioRecord?.read(buffer, 0, buffer.size)
                         if (readSize != null) {
                             if (readSize > 0) {
-                                webSocket.send(buffer.toByteString(0, readSize))
+                                val audioFlag = webSocket.send(buffer.toByteString(0, readSize))
+                                Log.d("Flag","Audio ${audioFlag}")
                             }
                         }
                     }

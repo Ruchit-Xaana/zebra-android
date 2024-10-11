@@ -11,6 +11,4 @@ interface VoiceChatEvents {
     data object Start : VoiceChatEvents
     data object Stop : VoiceChatEvents
     data object Exit : VoiceChatEvents
-    data object Connect : VoiceChatEvents
-    data object Disconnect : VoiceChatEvents
 }

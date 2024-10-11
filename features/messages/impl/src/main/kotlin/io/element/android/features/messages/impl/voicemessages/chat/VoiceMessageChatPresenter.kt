@@ -8,6 +8,7 @@
 package io.element.android.features.messages.impl.voicemessages.chat
 
 import android.Manifest
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,17 +44,20 @@ class VoiceMessageChatPresenter @Inject constructor(
     private val audioSpeaker : DefaultAudioPlayer,
 ) : Presenter<VoiceMessageChatState> {
     private val micPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.RECORD_AUDIO)
+    private var webSocket: WebSocket? = null
     private var audioStreamer = AudioStreamer()
     private val audioTrack = AudioTrack(listener = object : AudioTrackPlaybackListener {
         override fun onAudioPlaying() {
+            Log.d("AudioTrack","Audio is playing")
             audioStreamer.setMicSilence(true)
         }
 
         override fun onSilenceDetected() {
+            Log.d("AudioTrack","Silence detected")
             audioStreamer.setMicSilence(false)
         }
     })
-    private var webSocket: WebSocket? = null
+
 
     @Composable
     override fun present(): VoiceMessageChatState {
@@ -67,32 +71,6 @@ class VoiceMessageChatPresenter @Inject constructor(
 
         fun handleEvents(event: VoiceChatEvents) {
             when (event) {
-                VoiceChatEvents.Connect -> {
-                    if(webSocket!=null)webSocket=connectWebSocket()
-                    val permissionGranted = micPermissionState.permissionGranted
-                    when {
-                        permissionGranted -> {
-                            try{
-                                audioStreamer.initAudioRecord()
-                                audioStreamer.startRecording(webSocket!!)
-                            }
-                            catch (e:SecurityException){
-                                Timber.e(e, "Mic permissions not added")
-                            }
-
-                        }
-                        else -> {
-                            Timber.i("Microphone permission needed")
-                            micPermissionState.eventSink(PermissionsEvents.RequestPermissions)
-                        }
-                    }
-                }
-                VoiceChatEvents.Disconnect -> {
-                    webSocket?.close(1000, "Normal Closure")
-                    webSocket=null
-                    audioStreamer.stopRecording()
-                    audioTrack.stopPlayback()
-                }
                 VoiceChatEvents.Exit -> {
                     webSocket?.close(1000, "Normal Closure")
                     webSocket=null
@@ -133,89 +111,6 @@ class VoiceMessageChatPresenter @Inject constructor(
             eventSink = { handleEvents(it) },
         )
     }
-
-//    private fun CoroutineScope.startRecording(callback: SpeechRecognitionListener) = launch {
-//        try {
-//            audioRecorder.startRecording(object : SpeechRecognitionListener {
-//                override fun onReadyForSpeech() {
-//                    callback.onReadyForSpeech()  // Send the RMS change to the callback
-//                }
-//                override fun onTextRecognized(recognizedText: String) {
-//                    // Handle the recognized text here
-//                    callback.onTextRecognized(recognizedText)
-//                    audioRecorder.stopRecording()
-//                }
-//
-//                override fun onError(error: Int) {
-//                    // Handle error here
-//                    callback.onError(error)
-//                    Timber.e("Speech recognition error: $error")
-//                    audioRecorder.stopRecording()
-//                }
-//
-//                override fun onRmsChanged(rmsDB: Float) {
-//                    callback.onRmsChanged(rmsDB)  // Send the RMS change to the callback
-//                }
-//
-//                override fun onEndOfSpeech() {
-//                    callback.onEndOfSpeech()
-//                }
-//            })
-//        } catch (e: SecurityException) {
-//            Timber.e(e, "Audio Capture error")
-//            analyticsService.trackError(VoiceMessageException.PermissionMissing("Expected permission to record but none", e))
-//        }
-//    }
-//
-//    private fun sendMessageToRoom(room: MatrixRoom, recognizedText: String,streamListener: VoiceBotStreamListener,onPlaybackCompleted: (flag:Boolean, audioSessionId: Int?) -> Unit) {
-//        CoroutineScope(Dispatchers.IO).launch {
-//            try {
-//                room.sendMessage("Init from homepage...", "<p>${recognizedText}</p>", emptyList())
-//                val currentUserId = room.sessionId
-//                val currentRoomId = room.roomId
-//                val messageEventId = waitForEventId("<p>${recognizedText}</p>")
-//                if(messageEventId!=null) {
-//                    val payload = JSONObject().apply {
-//                        put("query", recognizedText)
-//                        put("eventId", messageEventId)
-//                        put("user_id", currentUserId)
-//                    }
-//                    val botApiUrl = "$BOT_API_URL/stream_audio/$currentRoomId"
-//                    val zebraStream = VoiceBotStream(audioSpeaker)
-//                    zebraStream.startJsonStream(botApiUrl, payload,object : AudioPlaybackListener {
-//                        override fun onPlaying(audioSessionId: Int) {
-//                            onPlaybackCompleted(false,audioSessionId)
-//                        }
-//
-//                        override fun onPlaybackCompleted() {
-//                            Log.d("BotStream","Playback completed in voice message presenter")
-//                            onPlaybackCompleted(true,null)
-//                        }
-//
-//                        override fun onPlaybackError(errorMessage: String) {
-//                            Log.d("BotStream","Error Got in voice message presenter")
-//                            streamListener.onStreamError("Playback error: $errorMessage")
-//                            onPlaybackCompleted(true,null)
-//                        }
-//                    },streamListener)
-//                }
-//            } catch (e: Exception) {
-//                Timber.e(e.message)
-//            }
-//        }
-//    }
-//    private suspend fun waitForEventId(formattedBody: String): String? {
-//        return withTimeoutOrNull(5000L) {
-//            var eventId: String? = null
-//            while (eventId == null) {
-//                eventId = timelineController.getEventIdFromFormattedBody(formattedBody)
-//                if (eventId == null) {
-//                    delay(500)
-//                }
-//            }
-//            eventId
-//        }
-//    }
     private fun connectWebSocket():WebSocket {
         val client = OkHttpClient()
         val request = Request.Builder()
@@ -239,10 +134,12 @@ class VoiceMessageChatPresenter @Inject constructor(
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 webSocket.close(1000, null)
+                Log.d("AudioTrack","WebSocket closing")
                 Timber.i("WebSocket closing: $code / $reason")
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                Log.d("AudioTrack","WebSocket closed")
                 Timber.i("WebSocket closed: $code / $reason")
             }
         })
