@@ -24,8 +24,8 @@ import kotlin.math.sin
 
 @Composable
 fun AudioVisualizerView(
-    rmsDB: Float?,
     audioSessionId: Int?,
+    isRecording: Boolean,
     modifier: Modifier = Modifier
 ) {
     val visualizer = remember(audioSessionId) { audioSessionId?.let { Visualizer(it) } }
@@ -65,10 +65,7 @@ fun AudioVisualizerView(
         for (i in 0 until barCount) {
             val angle = (i * 360f / barCount) * (Math.PI / 180f).toFloat() // Angle in radians
             val barHeight = when {
-                rmsDB != null && rmsDB > -2 -> {
-                    val normalizedRms = (rmsDB + 2f).coerceIn(0f, 10f) / 10f // Normalize RMS dB value
-                    normalizedRms * (outerRadius - innerRadius) // Scale it for visualizer
-                }
+                audioSessionId == null -> 0f
                 fftData.value.isNotEmpty() -> {
                     fftData.value.getOrNull(i)?.toInt()?.coerceAtLeast(0)?.div(255f)?.times(outerRadius - innerRadius) ?: 0f
                 }
@@ -82,7 +79,7 @@ fun AudioVisualizerView(
             val endY = centerY + sin(angle) * (innerRadius + barHeight)
 
             drawLine(
-                color = Color.White,
+                color = if(isRecording) Color(0xFF90EE90) else Color(0xFFFFA500),
                 start = Offset(startX, startY),
                 end = Offset(endX, endY),
                 strokeWidth = 8f,

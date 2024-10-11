@@ -8,9 +8,12 @@
 package io.element.android.features.messages.impl.messagecomposer
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,6 +52,7 @@ import io.element.android.features.messages.impl.voicemessages.chat.VoiceChatEve
 import io.element.android.features.messages.impl.voicemessages.chat.VoiceMessageChatState
 import io.element.android.libraries.androidutils.ui.hideKeyboard
 import io.element.android.libraries.designsystem.theme.components.Text
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun VoiceChatView(
@@ -56,7 +61,6 @@ internal fun VoiceChatView(
 ) {
     val localView = LocalView.current
     var isVisible by rememberSaveable { mutableStateOf(composerState.showVoiceChatScreen) }
-    var enableButton by rememberSaveable { mutableStateOf(state.enableRecording) }
 
     BackHandler(enabled = isVisible) {
         isVisible = false
@@ -65,18 +69,11 @@ internal fun VoiceChatView(
     LaunchedEffect(Unit) {
         localView.hideKeyboard()
     }
-    LaunchedEffect(state.enableRecording) {
-        enableButton = if (state.enableRecording) {
-            localView.hideKeyboard()
-            true
-        } else {
-            false
-        }
-    }
 
     LaunchedEffect(isVisible) {
         if (!isVisible) {
             composerState.eventSink(MessageComposerEvents.VoiceChat.Dismiss)
+            state.eventSink(VoiceChatEvents.Disconnect)
         }
     }
 
@@ -84,9 +81,8 @@ internal fun VoiceChatView(
        VoiceChatScreen(
            state = state,
            composerState = composerState,
-           enableButton = enableButton,
+           enableButton = state.canStartSession,
            audioSessionId = state.audioSessionId,
-           rmsDB = state.rmsDB
        )
     }
 }
@@ -96,8 +92,8 @@ private fun VoiceChatScreen(
     composerState: MessageComposerState,
     enableButton : Boolean,
     audioSessionId: Int?,
-    rmsDB: Float?
 ) {
+    var showCustomToast by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -121,44 +117,21 @@ private fun VoiceChatScreen(
                 style = ElementTheme.typography.fontHeadingLgBold,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-                // Set a specific size for the visualizer
-                AudioVisualizerView(
-                    rmsDB = rmsDB,
-                    audioSessionId = audioSessionId,
-                    modifier = Modifier
-                        .weight(0.55f) // Adjust the size as needed
-                        .padding(bottom = 20.dp) // Add some spacing
-                )
+
+            AudioVisualizerView(
+                audioSessionId = audioSessionId,
+                isRecording = state.isRecording,
+                modifier = Modifier
+                    .weight(0.55f)
+                    .padding(bottom = 20.dp)
+            )
 
             Spacer(modifier = Modifier.weight(0.15f))
-            if (state.errorMessage!=null) {
-                Text(
-                    text = state.errorMessage,
-                    style = ElementTheme.typography.fontBodyLgRegular,
-                    color = Color.Black,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .border(2.dp, Color.Green, RoundedCornerShape(8.dp)) // Green border to grab attention
-                        .background(
-                            color = Color(0xAAFFFFFF), // Semi-transparent black background
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-            if (state.isReady) {
-                Text(
-                    text = "Speak now...",
-                    style = ElementTheme.typography.fontBodyLgRegular,
-                    color = Color.Black,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .border(2.dp, Color.Green, RoundedCornerShape(8.dp)) // Green border to grab attention
-                        .background(
-                            color = Color(0xAAFFFFFF), // Semi-transparent black background
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+
+            if (showCustomToast && state.toastMessage != null) {
+                CustomToast(
+                    message = state.toastMessage,
+                    onDismiss = { showCustomToast = false }
                 )
             }
             Row(
@@ -195,13 +168,9 @@ private fun VoiceChatScreen(
                 }
 
                 FloatingActionButton(
-                    onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Disconnect) },
+                    onClick = { state.eventSink(VoiceChatEvents.Disconnect) },
                     modifier = Modifier.size(60.dp),
-                    backgroundColor = if (enableButton) {
-                        ElementTheme.colors.iconPrimary
-                    } else {
-                        ElementTheme.colors.iconDisabled
-                    },
+                    backgroundColor = Color(0xFFFF1744),
                     elevation = FloatingActionButtonDefaults.elevation(8.dp),
                     shape = RoundedCornerShape(100)
                 )
@@ -209,12 +178,51 @@ private fun VoiceChatScreen(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Dismiss",
-                        tint = ElementTheme.materialColors.secondary
+                        tint = Color.Black
                     )
                 }
             }
             Spacer(modifier = Modifier.weight(0.1f))
+            LaunchedEffect(state.toastMessage) {
+                if (state.toastMessage != null) {
+                    showCustomToast = true
+                }
+            }
 
+        }
+    }
+}
+@Composable
+fun CustomToast(
+    message: String,
+    modifier: Modifier = Modifier,
+    durationMillis: Long = 2000L,
+    onDismiss: () -> Unit
+) {
+    var isVisible by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        delay(durationMillis)
+        isVisible = false
+        onDismiss()
+    }
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 300))
+    ) {
+        Box(
+            contentAlignment = Alignment.BottomCenter,
+            modifier = modifier
+                .padding(16.dp)
+        ) {
+            Text(
+                text = message,
+                modifier = Modifier
+                    .background(Color.White.copy(alpha = 0.8f), shape = RoundedCornerShape(8.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                color = Color.Black
+            )
         }
     }
 }

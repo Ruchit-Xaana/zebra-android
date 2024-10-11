@@ -11,10 +11,9 @@ import androidx.compose.runtime.Stable
 
 @Stable
 data class VoiceMessageChatState(
-    val enableRecording : Boolean,
+    val canStartSession : Boolean,
     val audioSessionId: Int?,
-    val rmsDB: Float?,
-    val isReady: Boolean,
-    val errorMessage: String?,
+    val isRecording: Boolean,
+    val toastMessage: String?,
     val eventSink: (VoiceChatEvents) -> Unit,
 )

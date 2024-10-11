@@ -19,17 +19,18 @@ class AudioTrack(
     private val sampleRate: Int = 24000,
     private val channelConfig: Int = AudioFormat.CHANNEL_OUT_MONO,
     private val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
-    private val listener: AudioTrackPlaybackListener? = null
 ) {
+    var audioSessionId: Int? = null
+    private var listener: AudioTrackPlaybackListener? = null
     private var audioTrack: AudioTrack? = null
     private var minBufferSize: Int = 0
     private val audioQueue: BlockingQueue<ByteArray> = LinkedBlockingQueue()
     private var isPlaying = false
 
 
-    fun initAudioTrack() {
+    fun initAudioTrack(listener: AudioTrackPlaybackListener) {
+        this.listener = listener
         minBufferSize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, audioFormat)*4
-
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_MEDIA)
             .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
@@ -45,6 +46,9 @@ class AudioTrack(
             .setBufferSizeInBytes(minBufferSize)
             .setTransferMode(AudioTrack.MODE_STREAM)
             .build()
+        audioSessionId = audioTrack?.audioSessionId
+        isPlaying = false
+        audioQueue.clear()
     }
 
     fun playAudioChunk(audioChunk: ByteArray) {

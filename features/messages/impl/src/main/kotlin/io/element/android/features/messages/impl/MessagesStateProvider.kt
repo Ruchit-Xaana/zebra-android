@@ -160,12 +160,11 @@ fun aUserEventPermissions(
 fun aVoiceChatState(
     eventSink: (VoiceChatEvents) -> Unit = {}
 ) = VoiceMessageChatState(
-    enableRecording = true,
+    canStartSession = true,
     eventSink = eventSink,
     audioSessionId = null,
-    isReady = false,
-    errorMessage = null,
-    rmsDB = null,
+    toastMessage = null,
+    isRecording = true,
 )
 
 fun aReactionSummaryState(

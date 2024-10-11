@@ -59,6 +59,8 @@ class AudioStreamer {
         } else {
             Timber.i("Noise Suppressor not available")
         }
+        isRecording = false
+        setSilence = false
     }
 
         fun startRecording(webSocket: WebSocket) {

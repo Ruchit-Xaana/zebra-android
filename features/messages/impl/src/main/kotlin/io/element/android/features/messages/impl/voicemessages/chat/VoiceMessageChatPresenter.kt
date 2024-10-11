@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import io.element.android.features.messages.impl.timeline.TimelineController
 import io.element.android.libraries.architecture.Presenter
@@ -45,26 +44,16 @@ class VoiceMessageChatPresenter @Inject constructor(
     private val micPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.RECORD_AUDIO)
     private var webSocket: WebSocket? = null
     private val audioStreamer = AudioStreamer()
-    private val audioTrack = AudioTrack(listener = object : AudioTrackPlaybackListener {
-        override fun onAudioPlaying() {
-            audioStreamer.setMicSilence(true)
-        }
-
-        override fun onSilenceDetected() {
-            audioStreamer.setMicSilence(false)
-        }
-    })
+    private val audioTrack = AudioTrack()
 
 
     @Composable
     override fun present(): VoiceMessageChatState {
-        val localCoroutineScope = rememberCoroutineScope()
         val micPermissionState = micPermissionPresenter.present()
-        var enableRecording: Boolean by remember { mutableStateOf(true) }
+        var canStartSession: Boolean by remember { mutableStateOf(true) }
         var audioSessionId: Int? by remember { mutableStateOf(null) }
-        var rmsDB: Float? by remember { mutableStateOf(null) }
-        var isReady: Boolean by remember { mutableStateOf(false) }
-        var error: String? by remember { mutableStateOf(null) }
+        var isRecording: Boolean by remember { mutableStateOf(true) }
+        var toast: String? by remember { mutableStateOf(null) }
 
         fun handleEvents(event: VoiceChatEvents) {
             when (event) {
@@ -74,9 +63,22 @@ class VoiceMessageChatPresenter @Inject constructor(
                     when {
                         permissionGranted -> {
                             try{
-                                webSocket=connectWebSocket()
+                                canStartSession=false
+                                webSocket=connectWebSocket{message->toast=message}
                                 audioStreamer.initAudioRecord()
-                                audioTrack.initAudioTrack()
+                                audioTrack.initAudioTrack(listener = object : AudioTrackPlaybackListener {
+                                    override fun onAudioPlaying() {
+                                        audioStreamer.setMicSilence(true)
+                                        audioSessionId=audioTrack.audioSessionId
+                                        isRecording=false
+                                    }
+
+                                    override fun onSilenceDetected() {
+                                        audioStreamer.setMicSilence(false)
+                                        audioSessionId=null
+                                        isRecording=true
+                                    }
+                                })
                                 audioStreamer.startRecording(webSocket!!)
                             }
                             catch (e:SecurityException){
@@ -97,19 +99,22 @@ class VoiceMessageChatPresenter @Inject constructor(
                     Timber.v("Mic stop recording")
                     audioTrack.stopPlayback()
                     audioStreamer.stopRecording()
+                    canStartSession=true
+                    audioSessionId=null
+                    isRecording=true
+                    toast=null
                 }
             }
         }
         return VoiceMessageChatState(
-            enableRecording = enableRecording,
+            canStartSession = canStartSession,
             audioSessionId = audioSessionId,
-            rmsDB = rmsDB,
-            errorMessage = error,
-            isReady = isReady,
+            isRecording = isRecording,
+            toastMessage = toast,
             eventSink = { handleEvents(it) },
         )
     }
-    private fun connectWebSocket():WebSocket {
+    private fun connectWebSocket(setToast: (String?) -> Unit):WebSocket {
         val client = OkHttpClient()
         val request = Request.Builder()
             .url("ws://3.106.211.173:32340/ws/audio")
@@ -127,6 +132,7 @@ class VoiceMessageChatPresenter @Inject constructor(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                setToast("WebSocket error: ${t.message}")
                 Timber.e("WebSocket error: ${t.message}")
             }
 
@@ -136,6 +142,7 @@ class VoiceMessageChatPresenter @Inject constructor(
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                setToast("WebSocket closed with code: $code")
                 Timber.i("WebSocket closed: $code / $reason")
             }
         })
