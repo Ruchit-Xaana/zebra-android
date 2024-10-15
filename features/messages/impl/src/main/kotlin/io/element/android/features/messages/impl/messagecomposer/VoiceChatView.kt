@@ -18,18 +18,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CallEnd
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -49,14 +54,19 @@ import io.element.android.features.messages.impl.R
 import io.element.android.features.messages.impl.voicemessages.chat.VoiceChatEvents
 import io.element.android.features.messages.impl.voicemessages.chat.VoiceMessageChatState
 import io.element.android.libraries.androidutils.ui.hideKeyboard
+import io.element.android.libraries.designsystem.theme.components.ModalBottomSheet
 import io.element.android.libraries.designsystem.theme.components.Text
+import io.element.android.libraries.designsystem.theme.customScrimColor
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun VoiceChatView(
     state: VoiceMessageChatState,
     composerState: MessageComposerState,
+    modifier: Modifier = Modifier,
 ) {
+
     val localView = LocalView.current
     var isVisible by rememberSaveable { mutableStateOf(composerState.showVoiceChatScreen) }
 
@@ -64,24 +74,40 @@ internal fun VoiceChatView(
         isVisible = false
     }
 
-    LaunchedEffect(Unit) {
-        localView.hideKeyboard()
+    LaunchedEffect(composerState.showVoiceChatScreen) {
+        isVisible = if (composerState.showVoiceChatScreen) {
+            localView.hideKeyboard()
+            true
+        } else {
+            false
+        }
     }
-
     LaunchedEffect(isVisible) {
         if (!isVisible) {
             composerState.eventSink(MessageComposerEvents.VoiceChat.Dismiss)
             state.eventSink(VoiceChatEvents.Disconnect)
         }
     }
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val bottomSheetTopPadding = screenHeight * 1/ 3
 
     if (isVisible) {
-       VoiceChatScreen(
-           state = state,
-           composerState = composerState,
-           enableButton = state.canStartSession,
-           audioSessionId = state.audioSessionId,
-       )
+        ModalBottomSheet(
+            modifier = modifier.systemBarsPadding()
+                .padding(top = bottomSheetTopPadding),
+            sheetState = rememberModalBottomSheetState(
+                skipPartiallyExpanded = true
+            ),
+            scrimColor =ElementTheme.colors.customScrimColor.copy(alpha = 0.8f),
+            onDismissRequest = { isVisible = false }
+        ) {
+                VoiceChatScreen(
+                    state = state,
+                    composerState = composerState,
+                    enableButton = state.canStartSession,
+                    audioSessionId = state.audioSessionId,
+                )
+        }
     }
 }
 @Composable
@@ -94,7 +120,8 @@ private fun VoiceChatScreen(
     var showCustomToast by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .navigationBarsPadding()
+            .imePadding()
     ) {
         Image(
             painter = painterResource(id = R.drawable.background_chat),
@@ -109,13 +136,6 @@ private fun VoiceChatScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.weight(0.2f))
-            Text(
-                text = "Voice Chat",
-                style = ElementTheme.typography.fontHeadingLgBold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
             AudioVisualizerView(
                 audioSessionId = audioSessionId,
                 isRecording = state.isRecording,
@@ -123,8 +143,6 @@ private fun VoiceChatScreen(
                     .weight(0.55f)
                     .padding(bottom = 20.dp)
             )
-
-            Spacer(modifier = Modifier.weight(0.15f))
 
             if (showCustomToast && state.toastMessage != null) {
                 CustomToast(
@@ -171,7 +189,6 @@ private fun VoiceChatScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.weight(0.1f))
             LaunchedEffect(state.toastMessage) {
                 if (state.toastMessage != null) {
                     showCustomToast = true

@@ -11,6 +11,7 @@ package io.element.android.features.messages.impl.voicemessages.chat
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
+import timber.log.Timber
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -79,13 +80,19 @@ class AudioTrack(
                         audioTrack?.write(chunk, 0, chunk.size)
                     }
                 }
-                if (audioTrack?.playState != AudioTrack.PLAYSTATE_PLAYING) {
-                    listener?.onAudioPlaying()
-                    audioTrack?.play()
+                try {
+                    if (audioTrack?.state == AudioTrack.STATE_INITIALIZED && audioTrack?.playState != AudioTrack.PLAYSTATE_PLAYING) {
+                        listener?.onAudioPlaying()
+                        audioTrack?.play()
+                    }
+                }
+                catch (e: IllegalStateException){
+                    Timber.e(e, "Audio track not initialized")
                 }
             }
         }
     }
+    @Synchronized
     fun stopPlayback() {
         isPlaying = false
         audioQueue.clear()

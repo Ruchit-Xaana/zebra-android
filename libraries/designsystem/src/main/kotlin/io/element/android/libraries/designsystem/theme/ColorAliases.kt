@@ -85,6 +85,15 @@ val SemanticColors.hyperlinkColor
         Color(0xFF00FFFF)
     }
 
+val SemanticColors.customScrimColor
+    get() = if (isLight) {
+        // We want LightDesignTokens.colorGray300
+        Color(0xFFF0F0F0)
+    } else {
+        // We want DarkDesignTokens.colorGray400
+        Color(0xFF000000)
+    }
+
 // This color is not present in Semantic color, so put hard-coded value for now
 val SemanticColors.progressIndicatorTrackColor
     get() = if (isLight) {

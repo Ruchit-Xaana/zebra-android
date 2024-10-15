@@ -179,12 +179,6 @@ fun MessagesView(
     fun onMoreReactionsClick(event: TimelineItem.Event) {
         state.customReactionState.eventSink(CustomReactionEvents.ShowCustomReactionSheet(event))
     }
-    if (state.composerState.showVoiceChatScreen) {
-        VoiceChatView(
-            state = state.voiceChatState,
-            composerState = state.composerState,
-        )
-    } else {
         Scaffold(
             modifier = modifier,
             contentWindowInsets = WindowInsets.statusBars,
@@ -268,7 +262,6 @@ fun MessagesView(
         )
         ReinviteDialog(state = state)
     }
-}
 @Composable
 private fun ReinviteDialog(state: MessagesState) {
     if (state.showReinvitePrompt) {
@@ -342,6 +335,10 @@ private fun MessagesViewContent(
             onSendLocationClick = onSendLocationClick,
             onCreatePollClick = onCreatePollClick,
             enableTextFormatting = state.enableTextFormatting,
+        )
+        VoiceChatView(
+            state = state.voiceChatState,
+            composerState = state.composerState,
         )
 
         if (state.enableVoiceMessages && state.voiceMessageComposerState.showPermissionRationaleDialog) {

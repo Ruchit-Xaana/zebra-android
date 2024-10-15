@@ -99,15 +99,15 @@ private fun AttachmentSourcePickerMenu(
             .imePadding()
     ) {
         ListItem(
-            modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.AudioCapture.Start) },
-            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.AudioCapture())),
-            headlineContent = { Text(stringResource(R.string.screen_room_action_audio_capture_stt)) },
-            style = ListItemStyle.Primary,
-        )
-        ListItem(
             modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.VoiceChat.Launch) },
             leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.HeadsetIcon())),
             headlineContent = { Text(stringResource(R.string.screen_room_action_start_voice_chat)) },
+            style = ListItemStyle.Primary,
+        )
+        ListItem(
+            modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.AudioCapture.Start) },
+            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.AudioCapture())),
+            headlineContent = { Text(stringResource(R.string.screen_room_action_audio_capture_stt)) },
             style = ListItemStyle.Primary,
         )
         ListItem(
