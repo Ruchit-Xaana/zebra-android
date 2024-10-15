@@ -12,7 +12,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,10 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import io.element.android.compound.theme.ElementTheme
 import io.element.android.features.messages.impl.R
@@ -123,12 +120,6 @@ private fun VoiceChatScreen(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.background_chat),
-            contentDescription = "Background Image",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -141,7 +132,8 @@ private fun VoiceChatScreen(
                 isRecording = state.isRecording,
                 modifier = Modifier
                     .weight(0.55f)
-                    .padding(bottom = 20.dp)
+                    .padding(bottom = 20.dp),
+                imageRes = R.drawable.zebra_chat_icon
             )
 
             if (showCustomToast && state.toastMessage != null) {
