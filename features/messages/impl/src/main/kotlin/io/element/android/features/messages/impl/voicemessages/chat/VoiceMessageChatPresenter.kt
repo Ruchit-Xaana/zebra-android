@@ -132,7 +132,7 @@ class VoiceMessageChatPresenter @Inject constructor(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                setToast("WebSocket error: ${t.message}")
+                setToast("Error connecting to server")
                 Timber.e("WebSocket error: ${t.message}")
             }
 
@@ -142,7 +142,7 @@ class VoiceMessageChatPresenter @Inject constructor(
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                setToast("WebSocket closed with code: $code")
+                if(code == 1000)setToast("Session ended")else setToast("Session ended unexpectedly.")
                 Timber.i("WebSocket closed: $code / $reason")
             }
         })
