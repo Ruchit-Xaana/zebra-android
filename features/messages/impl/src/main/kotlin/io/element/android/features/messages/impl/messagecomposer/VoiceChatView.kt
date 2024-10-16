@@ -144,41 +144,40 @@ private fun VoiceChatScreen(
             }
             Row(
                 modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally).padding(bottom = 30.dp),
-                horizontalArrangement = Arrangement.spacedBy(80.dp, Alignment.End) ,
+                horizontalArrangement = Arrangement.spacedBy(80.dp, Alignment.CenterHorizontally) ,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FloatingActionButton(
-                    onClick = { if (enableButton) state.eventSink(VoiceChatEvents.Connect) },
-                    backgroundColor = if (!enableButton) {
-                        ElementTheme.colors.iconDisabled
-                    } else{
-                        Color(0xFF4CAF50)
-                    },
-                    modifier = Modifier.size(80.dp),
-                    shape = RoundedCornerShape(100)
-                )
-                {
+                if(enableButton){
+                    FloatingActionButton(
+                        onClick = { state.eventSink(VoiceChatEvents.Connect) },
+                        backgroundColor = Color(0xFF4CAF50),
+                        modifier = Modifier.size(80.dp),
+                        shape = RoundedCornerShape(100)
+                    )
+                    {
                         Icon(
                             imageVector = Icons.Default.Call,
                             modifier = Modifier.size(40.dp),
                             contentDescription = "Start Session",
                             tint = ElementTheme.colors.iconPrimary
                         )
+                    }
                 }
-
-                FloatingActionButton(
-                    onClick = { state.eventSink(VoiceChatEvents.Disconnect) },
-                    modifier = Modifier.size(60.dp),
-                    backgroundColor = Color(0xFFFF1744),
-                    elevation = FloatingActionButtonDefaults.elevation(8.dp),
-                    shape = RoundedCornerShape(100)
-                )
-                {
-                    Icon(
-                        imageVector = Icons.Default.CallEnd,
-                        contentDescription = "Dismiss Session",
-                        tint = ElementTheme.colors.iconPrimary
+                else{
+                    FloatingActionButton(
+                        onClick = { state.eventSink(VoiceChatEvents.Disconnect) },
+                        modifier = Modifier.size(80.dp),
+                        backgroundColor = Color(0xFFFF1744),
+                        elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                        shape = RoundedCornerShape(100)
                     )
+                    {
+                        Icon(
+                            imageVector = Icons.Default.CallEnd,
+                            contentDescription = "Dismiss Session",
+                            tint = ElementTheme.colors.iconPrimary
+                        )
+                    }
                 }
             }
             LaunchedEffect(state.toastMessage) {
