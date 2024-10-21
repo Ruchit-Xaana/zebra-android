@@ -1,0 +1,26 @@
+<!--
+  ~ Copyright 2024 New Vector Ltd.
+  ~
+  ~ SPDX-License-Identifier: AGPL-3.0-only
+  ~ Please see LICENSE in the repository root for full details.
+  -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+    <link href="https://unpkg.com/@bpmn-io/form-js/dist/assets/form-js.css" rel="stylesheet" />
+    <title>Form</title>
+</head>
+<body>
+<div id="form"></div>
+<script src="file:///android_asset/bundle.js"></script> <!-- Load the bundled JS -->
+<script>
+    function initializeForm(schema, data) {
+        formJsLib.loadForm(schema, data);
+    }
+</script>
+</body>
+</html>
+
