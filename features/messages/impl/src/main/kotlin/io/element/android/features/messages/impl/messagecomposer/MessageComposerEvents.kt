@@ -44,4 +44,5 @@ sealed interface MessageComposerEvents {
         data object Launch : VoiceChat
         data object Dismiss : VoiceChat
     }
+    data object Forms : MessageComposerEvents
 }

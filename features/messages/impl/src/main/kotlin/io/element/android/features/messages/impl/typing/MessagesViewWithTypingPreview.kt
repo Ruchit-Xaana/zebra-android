@@ -30,6 +30,7 @@ internal fun MessagesViewWithTypingPreview(
         onSendLocationClick = {},
         onCreatePollClick = {},
         onJoinCallClick = {},
+        onFormsClick = {},
         onFetchMessages = {},
         onViewAllPinnedMessagesClick = {},
     )

@@ -33,6 +33,7 @@ import io.element.android.features.messages.api.MessagesEntryPoint
 import io.element.android.features.messages.impl.attachments.Attachment
 import io.element.android.features.messages.impl.attachments.preview.AttachmentsPreviewNode
 import io.element.android.features.messages.impl.forward.ForwardMessagesNode
+import io.element.android.features.messages.impl.messagecomposer.forms.FormNode
 import io.element.android.features.messages.impl.pinned.PinnedEventsTimelineProvider
 import io.element.android.features.messages.impl.pinned.list.PinnedMessagesListNode
 import io.element.android.features.messages.impl.report.ReportMessageNode
@@ -142,6 +143,9 @@ class MessagesFlowNode @AssistedInject constructor(
         data object CreatePoll : NavTarget
 
         @Parcelize
+        data object Forms : NavTarget
+
+        @Parcelize
         data class EditPoll(val eventId: EventId) : NavTarget
 
         @Parcelize
@@ -208,6 +212,10 @@ class MessagesFlowNode @AssistedInject constructor(
 
                     override fun onCreatePollClick() {
                         backstack.push(NavTarget.CreatePoll)
+                    }
+
+                    override fun onFormsClick() {
+                        backstack.push(NavTarget.Forms)
                     }
 
                     override fun onEditPollClick(eventId: EventId) {
@@ -322,6 +330,9 @@ class MessagesFlowNode @AssistedInject constructor(
             }
             NavTarget.Empty -> {
                 node(buildContext) {}
+            }
+            NavTarget.Forms -> {
+                createNode<FormNode>(buildContext)
             }
         }
     }

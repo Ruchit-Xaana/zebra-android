@@ -115,8 +115,7 @@ class RoomListPresenter @Inject constructor(
             client.getUserProfile()
         }
 
-        var securityBannerDismissed by rememberSaveable { mutableStateOf(false) }
-        securityBannerDismissed = buildMeta.buildType == BuildType.RELEASE
+        var securityBannerDismissed by rememberSaveable { mutableStateOf(buildMeta.buildType == BuildType.RELEASE) }
 
         // Avatar indicator
         val showAvatarIndicator by indicatorService.showRoomListTopBarIndicator()

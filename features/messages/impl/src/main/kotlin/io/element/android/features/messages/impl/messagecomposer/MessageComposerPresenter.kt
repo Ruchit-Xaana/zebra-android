@@ -443,6 +443,9 @@ class MessageComposerPresenter @Inject constructor(
                     Timber.v("Voice chat dismissed")
                     showVoiceChatScreen = false
                 }
+                MessageComposerEvents.Forms -> {
+                    showAttachmentSourcePicker = false
+                }
             }
         }
 

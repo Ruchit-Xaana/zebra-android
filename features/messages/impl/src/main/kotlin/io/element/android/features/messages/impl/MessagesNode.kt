@@ -84,6 +84,7 @@ class MessagesNode @AssistedInject constructor(
         fun onReportMessage(eventId: EventId, senderId: UserId)
         fun onSendLocationClick()
         fun onCreatePollClick()
+        fun onFormsClick()
         fun onEditPollClick(eventId: EventId)
         fun onJoinCallClick(roomId: RoomId)
         fun onViewAllPinnedEvents()
@@ -191,6 +192,10 @@ class MessagesNode @AssistedInject constructor(
         callbacks.forEach { it.onCreatePollClick() }
     }
 
+    private fun onFormsClick() {
+        callbacks.forEach { it.onFormsClick() }
+    }
+
     private fun onJoinCallClick() {
         callbacks.forEach { it.onJoinCallClick(room.roomId) }
     }
@@ -218,6 +223,7 @@ class MessagesNode @AssistedInject constructor(
                 onLinkClick = { onLinkClick(context, it, state.timelineState.eventSink) },
                 onSendLocationClick = this::onSendLocationClick,
                 onCreatePollClick = this::onCreatePollClick,
+                onFormsClick = this::onFormsClick,
                 onJoinCallClick = this::onJoinCallClick,
                 onViewAllPinnedMessagesClick = this::onViewAllPinnedMessagesClick,
                 onFetchMessages = this::onFetchMessages,

@@ -42,6 +42,7 @@ internal fun AttachmentsBottomSheet(
     state: MessageComposerState,
     onSendLocationClick: () -> Unit,
     onCreatePollClick: () -> Unit,
+    onFormsClick: () -> Unit,
     enableTextFormatting: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -81,6 +82,7 @@ internal fun AttachmentsBottomSheet(
                 enableTextFormatting = enableTextFormatting,
                 onSendLocationClick = onSendLocationClick,
                 onCreatePollClick = onCreatePollClick,
+                onFormsClick = onFormsClick,
             )
         }
     }
@@ -91,6 +93,7 @@ private fun AttachmentSourcePickerMenu(
     state: MessageComposerState,
     onSendLocationClick: () -> Unit,
     onCreatePollClick: () -> Unit,
+    onFormsClick: () -> Unit,
     enableTextFormatting: Boolean,
 ) {
     Column(
@@ -108,6 +111,15 @@ private fun AttachmentSourcePickerMenu(
             modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.AudioCapture.Start) },
             leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.AudioCapture())),
             headlineContent = { Text(stringResource(R.string.screen_room_action_audio_capture_stt)) },
+            style = ListItemStyle.Primary,
+        )
+        ListItem(
+            modifier = Modifier.clickable {
+                state.eventSink(MessageComposerEvents.Forms)
+                onFormsClick()
+            },
+            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.AudioCapture())),
+            headlineContent = { Text("Forms") },
             style = ListItemStyle.Primary,
         )
         ListItem(
@@ -176,6 +188,7 @@ internal fun AttachmentSourcePickerMenuPreview() = ElementPreview {
         ),
         onSendLocationClick = {},
         onCreatePollClick = {},
+        onFormsClick = {},
         enableTextFormatting = true,
     )
 }
