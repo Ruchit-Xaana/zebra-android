@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -504,14 +502,14 @@ private fun MessagesViewTopBar(
                 )
             }
         },
-        actions = {
-            CallMenuItem(
-                isCallOngoing = callState == RoomCallState.ONGOING,
-                onClick = onJoinCallClick,
-                enabled = callState != RoomCallState.DISABLED
-            )
-            Spacer(Modifier.width(8.dp))
-        },
+//        actions = {
+//            CallMenuItem(
+//                isCallOngoing = callState == RoomCallState.ONGOING,
+//                onClick = onJoinCallClick,
+//                enabled = callState != RoomCallState.DISABLED
+//            )
+//            Spacer(Modifier.width(8.dp))
+//        },
         windowInsets = WindowInsets(0.dp)
     )
 }

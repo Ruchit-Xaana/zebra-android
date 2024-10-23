@@ -297,13 +297,13 @@ private fun MainActionsSection(
                 )
             }
         }
-        if (state.canCall) {
-            MainActionButton(
-                title = stringResource(CommonStrings.action_call),
-                imageVector = CompoundIcons.VideoCall(),
-                onClick = onCall,
-            )
-        }
+//        if (state.canCall) {
+//            MainActionButton(
+//                title = stringResource(CommonStrings.action_call),
+//                imageVector = CompoundIcons.VideoCall(),
+//                onClick = onCall,
+//            )
+//        }
         if (state.roomType is RoomDetailsType.Room) {
             if (state.canInvite) {
                 MainActionButton(
@@ -313,11 +313,11 @@ private fun MainActionsSection(
                 )
             }
             // Share CTA should be hidden for DMs
-            MainActionButton(
-                title = stringResource(CommonStrings.action_share),
-                imageVector = CompoundIcons.ShareAndroid(),
-                onClick = onShareRoom
-            )
+//            MainActionButton(
+//                title = stringResource(CommonStrings.action_share),
+//                imageVector = CompoundIcons.ShareAndroid(),
+//                onClick = onShareRoom
+//            )
         }
     }
 }

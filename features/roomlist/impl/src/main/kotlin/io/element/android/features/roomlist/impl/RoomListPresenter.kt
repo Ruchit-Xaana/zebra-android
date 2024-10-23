@@ -40,6 +40,8 @@ import io.element.android.features.roomlist.impl.search.RoomListSearchState
 import io.element.android.libraries.architecture.AsyncData
 import io.element.android.libraries.architecture.Presenter
 import io.element.android.libraries.core.bool.orFalse
+import io.element.android.libraries.core.meta.BuildMeta
+import io.element.android.libraries.core.meta.BuildType
 import io.element.android.libraries.designsystem.utils.snackbar.SnackbarDispatcher
 import io.element.android.libraries.designsystem.utils.snackbar.collectSnackbarMessageAsState
 import io.element.android.libraries.featureflag.api.FeatureFlagService
@@ -92,6 +94,7 @@ class RoomListPresenter @Inject constructor(
     private val fullScreenIntentPermissionsPresenter: FullScreenIntentPermissionsPresenter,
     private val notificationCleaner: NotificationCleaner,
     private val logoutPresenter: DirectLogoutPresenter,
+    private val buildMeta: BuildMeta,
 ) : Presenter<RoomListState> {
     private val encryptionService: EncryptionService = client.encryptionService()
     private val syncService: SyncService = client.syncService()
@@ -113,6 +116,7 @@ class RoomListPresenter @Inject constructor(
         }
 
         var securityBannerDismissed by rememberSaveable { mutableStateOf(false) }
+        securityBannerDismissed = buildMeta.buildType == BuildType.RELEASE
 
         // Avatar indicator
         val showAvatarIndicator by indicatorService.showRoomListTopBarIndicator()
