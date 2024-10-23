@@ -8,6 +8,7 @@
 package io.element.android.libraries.designsystem.icons
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Headset
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,10 +23,14 @@ object ZebraIcons {
     @Composable fun HeadsetIcon(): ImageVector {
         return Icons.Default.Headset
     }
+    @Composable fun FormIcon(): ImageVector {
+        return Icons.Default.Description
+    }
 
     val all @Composable get() = persistentListOf(
         AudioCapture(),
         HeadsetIcon(),
+        FormIcon(),
     )
 
     val allResIds get() = persistentListOf(

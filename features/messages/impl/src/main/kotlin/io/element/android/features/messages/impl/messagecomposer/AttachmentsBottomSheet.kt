@@ -118,7 +118,7 @@ private fun AttachmentSourcePickerMenu(
                 state.eventSink(MessageComposerEvents.Forms)
                 onFormsClick()
             },
-            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.AudioCapture())),
+            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.FormIcon())),
             headlineContent = { Text("Forms") },
             style = ListItemStyle.Primary,
         )
