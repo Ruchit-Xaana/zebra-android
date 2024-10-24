@@ -40,6 +40,7 @@ internal fun TimelineItemRow(
     focusedEventId: EventId?,
     onUserDataClick: (UserId) -> Unit,
     onLinkClick: (String) -> Unit,
+    onPromptClick: (String) -> Unit,
     onClick: (TimelineItem.Event) -> Unit,
     onLongClick: (TimelineItem.Event) -> Unit,
     inReplyToClick: (EventId) -> Unit,
@@ -58,6 +59,7 @@ internal fun TimelineItemRow(
                 eventId = event.eventId?.value,
                 content = event.content,
                 onLinkClick = onLinkClick,
+                onPromptClick = onPromptClick,
                 eventSink = eventSink,
                 modifier = contentModifier,
                 onContentLayoutChange = onContentLayoutChange
@@ -116,6 +118,7 @@ internal fun TimelineItemRow(
                             onClick = { onClick(timelineItem) },
                             onLongClick = { onLongClick(timelineItem) },
                             onLinkClick = onLinkClick,
+                            onPromptClick = onPromptClick,
                             onUserDataClick = onUserDataClick,
                             inReplyToClick = inReplyToClick,
                             onReactionClick = onReactionClick,

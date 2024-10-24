@@ -53,6 +53,7 @@ fun TimelineItemGroupedEventsRow(
             TimelineItemEventContentView(
                 content = event.content,
                 onLinkClick = onLinkClick,
+                onPromptClick = {},
                 eventSink = eventSink,
                 modifier = contentModifier,
                 onContentLayoutChange = onContentLayoutChange
@@ -78,6 +79,7 @@ fun TimelineItemGroupedEventsRow(
         inReplyToClick = inReplyToClick,
         onUserDataClick = onUserDataClick,
         onLinkClick = onLinkClick,
+        onPromptClick = {},
         onReactionClick = onReactionClick,
         onReactionLongClick = onReactionLongClick,
         onMoreReactionsClick = onMoreReactionsClick,
@@ -102,6 +104,7 @@ private fun TimelineItemGroupedEventsRowContent(
     inReplyToClick: (EventId) -> Unit,
     onUserDataClick: (UserId) -> Unit,
     onLinkClick: (String) -> Unit,
+    onPromptClick: (String) -> Unit,
     onReactionClick: (key: String, TimelineItem.Event) -> Unit,
     onReactionLongClick: (key: String, TimelineItem.Event) -> Unit,
     onMoreReactionsClick: (TimelineItem.Event) -> Unit,
@@ -113,6 +116,7 @@ private fun TimelineItemGroupedEventsRowContent(
             TimelineItemEventContentView(
                 content = event.content,
                 onLinkClick = onLinkClick,
+                onPromptClick = onPromptClick,
                 eventSink = eventSink,
                 modifier = contentModifier,
                 onContentLayoutChange = onContentLayoutChange
@@ -141,6 +145,7 @@ private fun TimelineItemGroupedEventsRowContent(
                         focusedEventId = focusedEventId,
                         onUserDataClick = onUserDataClick,
                         onLinkClick = onLinkClick,
+                        onPromptClick = onPromptClick,
                         onClick = onClick,
                         onLongClick = onLongClick,
                         inReplyToClick = inReplyToClick,
@@ -186,6 +191,7 @@ internal fun TimelineItemGroupedEventsRowContentExpandedPreview() = ElementPrevi
         inReplyToClick = {},
         onUserDataClick = {},
         onLinkClick = {},
+        onPromptClick = {},
         onReactionClick = { _, _ -> },
         onReactionLongClick = { _, _ -> },
         onMoreReactionsClick = {},
@@ -210,6 +216,7 @@ internal fun TimelineItemGroupedEventsRowContentCollapsePreview() = ElementPrevi
         inReplyToClick = {},
         onUserDataClick = {},
         onLinkClick = {},
+        onPromptClick = {},
         onReactionClick = { _, _ -> },
         onReactionLongClick = { _, _ -> },
         onMoreReactionsClick = {},

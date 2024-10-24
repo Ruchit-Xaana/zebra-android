@@ -162,6 +162,14 @@ fun MessagesView(
         )
     }
 
+    fun onPromptClick(prompt: String) {
+        Timber.v("OnPromptClicked= $prompt")
+        localView.hideKeyboard()
+        state.composerState.eventSink(
+            MessageComposerEvents.SetComposerText(prompt)
+        )
+    }
+
     fun onActionSelected(action: TimelineItemAction, event: TimelineItem.Event) {
         state.eventSink(MessagesEvents.HandleAction(action, event))
     }
@@ -210,6 +218,7 @@ fun MessagesView(
                     onMessageLongClick = ::onMessageLongClick,
                     onUserDataClick = onUserDataClick,
                     onLinkClick = onLinkClick,
+                    onPromptClick = ::onPromptClick,
                     onReactionClick = ::onEmojiReactionClick,
                     onReactionLongClick = ::onEmojiReactionLongClick,
                     onMoreReactionsClick = ::onMoreReactionsClick,
@@ -310,6 +319,7 @@ private fun MessagesViewContent(
     onMessageClick: (TimelineItem.Event) -> Unit,
     onUserDataClick: (UserId) -> Unit,
     onLinkClick: (String) -> Unit,
+    onPromptClick: (String) -> Unit,
     onReactionClick: (key: String, TimelineItem.Event) -> Unit,
     onReactionLongClick: (key: String, TimelineItem.Event) -> Unit,
     onMoreReactionsClick: (TimelineItem.Event) -> Unit,
@@ -390,6 +400,7 @@ private fun MessagesViewContent(
                         typingNotificationState = state.typingNotificationState,
                         onUserDataClick = onUserDataClick,
                         onLinkClick = onLinkClick,
+                        onPromptClick = onPromptClick,
                         onMessageClick = onMessageClick,
                         onMessageLongClick = onMessageLongClick,
                         onSwipeToReply = onSwipeToReply,

@@ -212,6 +212,7 @@ private fun PinnedMessagesListLoaded(
                 focusedEventId = null,
                 onUserDataClick = onUserDataClick,
                 onLinkClick = onLinkClick,
+                onPromptClick = {},
                 onClick = onEventClick,
                 onLongClick = ::onMessageLongClick,
                 inReplyToClick = {},
@@ -252,6 +253,7 @@ private fun TimelineItemEventContentViewWrapper(
         TimelineItemEventContentView(
             content = event.content,
             onLinkClick = onLinkClick,
+            onPromptClick = {},
             eventSink = { },
             modifier = modifier,
             onContentLayoutChange = onContentLayoutChange

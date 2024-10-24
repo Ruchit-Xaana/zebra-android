@@ -113,6 +113,7 @@ fun TimelineItemEventRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onLinkClick: (String) -> Unit,
+    onPromptClick: (String) -> Unit,
     onUserDataClick: (UserId) -> Unit,
     inReplyToClick: (EventId) -> Unit,
     onReactionClick: (emoji: String, eventId: TimelineItem.Event) -> Unit,
@@ -126,6 +127,7 @@ fun TimelineItemEventRow(
         TimelineItemEventContentView(
             content = event.content,
             onLinkClick = onLinkClick,
+            onPromptClick = onPromptClick,
             eventSink = eventSink,
             modifier = contentModifier,
             onContentLayoutChange = onContentLayoutChange

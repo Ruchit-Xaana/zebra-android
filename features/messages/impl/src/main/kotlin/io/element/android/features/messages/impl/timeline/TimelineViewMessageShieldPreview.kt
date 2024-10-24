@@ -39,6 +39,7 @@ internal fun TimelineViewMessageShieldPreview() = ElementPreview {
             typingNotificationState = aTypingNotificationState(),
             onUserDataClick = {},
             onLinkClick = {},
+            onPromptClick = {},
             onMessageClick = {},
             onMessageLongClick = {},
             onSwipeToReply = {},

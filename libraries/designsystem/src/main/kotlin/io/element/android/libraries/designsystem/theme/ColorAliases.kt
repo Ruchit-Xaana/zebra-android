@@ -85,6 +85,15 @@ val SemanticColors.hyperlinkColor
         Color(0xFF00FFFF)
     }
 
+val SemanticColors.promptColor
+    get() = if (isLight) {
+        // We want LightDesignTokens.colorGray300
+        Color(0xFF8E24AA)
+    } else {
+        // We want DarkDesignTokens.colorGray400
+        Color(0xFFCE93D8)
+    }
+
 val SemanticColors.customScrimColor
     get() = if (isLight) {
         // We want LightDesignTokens.colorGray300

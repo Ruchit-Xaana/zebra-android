@@ -136,6 +136,7 @@ class RoomListScreen(
         },
         notificationCleaner = FakeNotificationCleaner(),
         logoutPresenter = DefaultDirectLogoutPresenter(matrixClient, encryptionService),
+        buildMeta = Singleton.buildMeta
     )
 
     @Composable

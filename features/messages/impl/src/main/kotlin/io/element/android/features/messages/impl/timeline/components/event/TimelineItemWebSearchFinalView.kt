@@ -62,6 +62,7 @@ import io.element.android.features.messages.impl.timeline.components.layout.Cont
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWebSearchContent
 import io.element.android.libraries.designsystem.theme.font.rubikFontFamily
 import io.element.android.libraries.designsystem.theme.hyperlinkColor
+import io.element.android.libraries.designsystem.theme.promptColor
 import io.element.android.libraries.matrix.api.core.UserId
 import io.element.android.libraries.matrix.ui.messages.LocalRoomMemberProfilesCache
 import io.element.android.libraries.matrix.ui.messages.RoomMemberProfilesCache
@@ -77,6 +78,7 @@ fun TimelineItemWebSearchFinalView(
     content: TimelineItemWebSearchContent,
     modifier: Modifier = Modifier,
     onLinkClick: (String) -> Unit,
+    onPromptClick: (String) -> Unit,
     onContentLayoutChange: (ContentAvoidingLayoutData) -> Unit = {},
 ) {
     val body = getBodyWithResolvedMentions(content.body,content.formattedBody)
@@ -146,8 +148,37 @@ fun TimelineItemWebSearchFinalView(
                 IconWithText(Icons.Filled.Search,"Related:", FontWeight.Bold,16.sp,35.dp)
                 Spacer(modifier = Modifier.height(6.dp))
                 Column { // Display related questions in a column
-                    prompt?.forEach { link ->
-                        Text(text = "\u2022 $link",modifier = Modifier.padding(vertical = 4.dp),fontFamily = rubikFontFamily)
+                    prompt?.forEach { relatedPrompt ->
+                        Row(
+                            modifier = Modifier.padding(vertical = 0.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ){
+                            Icon(
+                                imageVector = Icons.Default.Circle,
+                                contentDescription = null,
+                                modifier = Modifier.size(10.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            ClickableText(
+                                text = buildAnnotatedString{
+                                    pushStyle(style = SpanStyle(fontSize = 18.sp))
+                                    pop()
+                                    pushStyle(
+                                        style = SpanStyle(
+                                            color = ElementTheme.colors.promptColor,
+                                            fontFamily = rubikFontFamily
+                                        )
+                                    )
+                                    append(relatedPrompt)
+                                    pop()
+                                },
+                                onClick = {
+                                    onPromptClick(relatedPrompt)
+                                },
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+
                     }
                 }
             }

@@ -41,6 +41,7 @@ import io.element.android.libraries.architecture.Presenter
 fun TimelineItemEventContentView(
     content: TimelineItemEventContent,
     onLinkClick: (url: String) -> Unit,
+    onPromptClick: (prompt: String) -> Unit,
     eventSink: (TimelineEvents.EventFromTimelineItem) -> Unit,
     modifier: Modifier = Modifier,
     roomId:String?=null,
@@ -138,6 +139,7 @@ fun TimelineItemEventContentView(
             content = content,
             modifier = modifier,
             onLinkClick = onLinkClick,
+            onPromptClick = onPromptClick,
             onContentLayoutChange = onContentLayoutChange
         )
         is TimelineItemCallNotifyContent -> error("This shouldn't be rendered as the content of a bubble")

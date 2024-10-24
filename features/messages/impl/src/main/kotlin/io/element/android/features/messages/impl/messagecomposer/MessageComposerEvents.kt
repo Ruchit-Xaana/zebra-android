@@ -20,6 +20,7 @@ sealed interface MessageComposerEvents {
     data class SendUri(val uri: Uri) : MessageComposerEvents
     data object CloseSpecialMode : MessageComposerEvents
     data class SetMode(val composerMode: MessageComposerMode) : MessageComposerEvents
+    data class SetComposerText(val prompt: String) : MessageComposerEvents
     data object AddAttachment : MessageComposerEvents
     data object DismissAttachmentMenu : MessageComposerEvents
     sealed interface PickAttachmentSource : MessageComposerEvents {
