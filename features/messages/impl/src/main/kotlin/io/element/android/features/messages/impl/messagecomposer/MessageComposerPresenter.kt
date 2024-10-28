@@ -446,6 +446,9 @@ class MessageComposerPresenter @Inject constructor(
                 MessageComposerEvents.Forms -> {
                     showAttachmentSourcePicker = false
                 }
+
+                MessageComposerEvents.FileSelector -> showAttachmentSourcePicker = false
+
                 is MessageComposerEvents.SetComposerText -> {
                     markdownTextEditorState.text.update(event.prompt, true)
                 }

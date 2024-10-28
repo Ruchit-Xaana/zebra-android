@@ -32,6 +32,7 @@ import io.element.android.features.location.api.ShowLocationEntryPoint
 import io.element.android.features.messages.api.MessagesEntryPoint
 import io.element.android.features.messages.impl.attachments.Attachment
 import io.element.android.features.messages.impl.attachments.preview.AttachmentsPreviewNode
+import io.element.android.features.messages.impl.files.FileSelectorNode
 import io.element.android.features.messages.impl.forward.ForwardMessagesNode
 import io.element.android.features.messages.impl.messagecomposer.forms.FormNode
 import io.element.android.features.messages.impl.pinned.PinnedEventsTimelineProvider
@@ -150,6 +151,9 @@ class MessagesFlowNode @AssistedInject constructor(
 
         @Parcelize
         data object PinnedMessagesList : NavTarget
+
+        @Parcelize
+        data class FileSelector(val senderId: UserId) : NavTarget
     }
 
     private val callbacks = plugins<MessagesEntryPoint.Callback>()
@@ -216,6 +220,10 @@ class MessagesFlowNode @AssistedInject constructor(
 
                     override fun onFormsClick() {
                         backstack.push(NavTarget.Forms)
+                    }
+
+                    override fun onFileSelectorClick() {
+                        backstack.push(NavTarget.FileSelector(room.sessionId))
                     }
 
                     override fun onEditPollClick(eventId: EventId) {
@@ -295,6 +303,10 @@ class MessagesFlowNode @AssistedInject constructor(
                 createPollEntryPoint.nodeBuilder(this, buildContext)
                     .params(CreatePollEntryPoint.Params(mode = CreatePollMode.EditPoll(eventId = navTarget.eventId)))
                     .build()
+            }
+            is NavTarget.FileSelector -> {
+                val inputs = FileSelectorNode.Inputs(navTarget.senderId)
+                createNode<FileSelectorNode>(buildContext, listOf(inputs))
             }
             NavTarget.PinnedMessagesList -> {
                 val callback = object : PinnedMessagesListNode.Callback {

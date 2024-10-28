@@ -85,6 +85,7 @@ class MessagesNode @AssistedInject constructor(
         fun onSendLocationClick()
         fun onCreatePollClick()
         fun onFormsClick()
+        fun onFileSelectorClick()
         fun onEditPollClick(eventId: EventId)
         fun onJoinCallClick(roomId: RoomId)
         fun onViewAllPinnedEvents()
@@ -196,6 +197,10 @@ class MessagesNode @AssistedInject constructor(
         callbacks.forEach { it.onFormsClick() }
     }
 
+    private fun onFileSelectorClick() {
+        callbacks.forEach { it.onFileSelectorClick() }
+    }
+
     private fun onJoinCallClick() {
         callbacks.forEach { it.onJoinCallClick(room.roomId) }
     }
@@ -224,6 +229,7 @@ class MessagesNode @AssistedInject constructor(
                 onSendLocationClick = this::onSendLocationClick,
                 onCreatePollClick = this::onCreatePollClick,
                 onFormsClick = this::onFormsClick,
+                onFileSelectorClick = this::onFileSelectorClick,
                 onJoinCallClick = this::onJoinCallClick,
                 onViewAllPinnedMessagesClick = this::onViewAllPinnedMessagesClick,
                 onFetchMessages = this::onFetchMessages,

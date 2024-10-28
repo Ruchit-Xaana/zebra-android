@@ -25,4 +25,5 @@ object AuthenticationConfig {
      */
     val SLIDING_SYNC_PROXY_URL: String? = null
     const val BOT_API_URL = "https://dev-api-1.securezebra.com/_matrix/maubot/plugin/zebra"
+    const val REPORTS_API_URL = "https://dev-api-2.securezebra.com"
 }

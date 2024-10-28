@@ -120,6 +120,7 @@ fun MessagesView(
     onSendLocationClick: () -> Unit,
     onCreatePollClick: () -> Unit,
     onFormsClick: () -> Unit,
+    onFileSelectorClick: () -> Unit,
     onJoinCallClick: () -> Unit,
     onViewAllPinnedMessagesClick: () -> Unit,
     onFetchMessages: () -> Unit,
@@ -228,6 +229,7 @@ fun MessagesView(
                     onSendLocationClick = onSendLocationClick,
                     onCreatePollClick = onCreatePollClick,
                     onFormsClick = onFormsClick,
+                    onFileSelectorClick = onFileSelectorClick,
                     onSwipeToReply = { targetEvent ->
                         state.eventSink(MessagesEvents.HandleAction(TimelineItemAction.Reply, targetEvent))
                     },
@@ -328,6 +330,7 @@ private fun MessagesViewContent(
     onSendLocationClick: () -> Unit,
     onCreatePollClick: () -> Unit,
     onFormsClick: () -> Unit,
+    onFileSelectorClick: () -> Unit,
     onJoinCallClick: () -> Unit,
     onViewAllPinnedMessagesClick: () -> Unit,
     onFetchMessages: () -> Unit,
@@ -346,6 +349,7 @@ private fun MessagesViewContent(
             onSendLocationClick = onSendLocationClick,
             onCreatePollClick = onCreatePollClick,
             onFormsClick = onFormsClick,
+            onFileSelectorClick = onFileSelectorClick,
             enableTextFormatting = state.enableTextFormatting,
         )
         VoiceChatView(
@@ -606,6 +610,7 @@ internal fun MessagesViewPreview(@PreviewParameter(MessagesStateProvider::class)
         onSendLocationClick = {},
         onCreatePollClick = {},
         onFormsClick = {},
+        onFileSelectorClick = {},
         onJoinCallClick = {},
         onViewAllPinnedMessagesClick = { },
         onFetchMessages = {},

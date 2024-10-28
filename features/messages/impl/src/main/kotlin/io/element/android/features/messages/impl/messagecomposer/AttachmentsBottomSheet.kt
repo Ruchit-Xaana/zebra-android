@@ -43,6 +43,7 @@ internal fun AttachmentsBottomSheet(
     onSendLocationClick: () -> Unit,
     onCreatePollClick: () -> Unit,
     onFormsClick: () -> Unit,
+    onFileSelectorClick: () -> Unit,
     enableTextFormatting: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -83,6 +84,7 @@ internal fun AttachmentsBottomSheet(
                 onSendLocationClick = onSendLocationClick,
                 onCreatePollClick = onCreatePollClick,
                 onFormsClick = onFormsClick,
+                onFileSelectorClick = onFileSelectorClick,
             )
         }
     }
@@ -94,6 +96,7 @@ private fun AttachmentSourcePickerMenu(
     onSendLocationClick: () -> Unit,
     onCreatePollClick: () -> Unit,
     onFormsClick: () -> Unit,
+    onFileSelectorClick: () -> Unit,
     enableTextFormatting: Boolean,
 ) {
     Column(
@@ -105,6 +108,15 @@ private fun AttachmentSourcePickerMenu(
             modifier = Modifier.clickable { state.eventSink(MessageComposerEvents.VoiceChat.Launch) },
             leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.HeadsetIcon())),
             headlineContent = { Text(stringResource(R.string.screen_room_action_start_voice_chat)) },
+            style = ListItemStyle.Primary,
+        )
+        ListItem(
+            modifier = Modifier.clickable {
+                state.eventSink(MessageComposerEvents.FileSelector)
+                onFileSelectorClick()
+            },
+            leadingContent = ListItemContent.Icon(IconSource.Vector(ZebraIcons.FileIcon())),
+            headlineContent = { Text("Select Files") },
             style = ListItemStyle.Primary,
         )
         ListItem(
@@ -189,6 +201,7 @@ internal fun AttachmentSourcePickerMenuPreview() = ElementPreview {
         onSendLocationClick = {},
         onCreatePollClick = {},
         onFormsClick = {},
+        onFileSelectorClick = {},
         enableTextFormatting = true,
     )
 }
