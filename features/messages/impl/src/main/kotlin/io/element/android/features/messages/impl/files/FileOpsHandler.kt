@@ -131,10 +131,10 @@ class FileOpsHandler @Inject constructor() {
             }
         }
 
-    fun dtoToFileAdapters(dto: FileDTO, defaultSenderId: String?): File {
+    fun dtoToFileAdapters(dto: FileDTO, defaultSenderId: String?): MatrixFile {
         val synapseUrl = AuthenticationConfig.DEFAULT_HOMESERVER_URL
         val uri = "$synapseUrl/_matrix/media/v3/download/securezebra.com/${dto.mediaId}"
-        return File(
+        return MatrixFile(
             id = dto.mediaId,
             name = dto.filename,
             downloadUrl = uri,

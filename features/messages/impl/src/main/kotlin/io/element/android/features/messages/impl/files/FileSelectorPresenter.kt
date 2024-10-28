@@ -7,6 +7,7 @@
 
 package io.element.android.features.messages.impl.files
 
+import android.os.Environment
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,8 +24,13 @@ import io.element.android.libraries.designsystem.utils.snackbar.SnackbarDispatch
 import io.element.android.libraries.matrix.api.core.UserId
 import io.element.android.libraries.matrix.api.room.MatrixRoom
 import io.element.android.libraries.mediapickers.api.PickerProvider
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class FileSelectorPresenter @AssistedInject constructor(
     private val room: MatrixRoom,
@@ -41,20 +47,38 @@ class FileSelectorPresenter @AssistedInject constructor(
     interface Factory {
         fun create(inputs: Inputs): FileSelectorPresenter
     }
+    private val allowedExtensions = listOf(".pdf", ".docx", ".doc", ".xlsx", ".xls", ".odt", ".rtf", ".csv", ".ods")
 
+    private fun isAllowedFileType(fileName: String): Boolean {
+        return allowedExtensions.any { fileName.endsWith(it, ignoreCase = true) }
+    }
+    private suspend fun downloadFile(mediaId: String, userId: String, fileName: String) {
+        val fileBytes = fileOpsHandler.getFile(mediaId, userId)
+
+        withContext(Dispatchers.IO) {
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) ?: return@withContext
+            val file = File(downloadsDir, fileName)
+
+            try {
+                FileOutputStream(file).use { outputStream ->
+                    outputStream.write(fileBytes)
+                }
+            } catch (e: IOException) {
+                Log.e( "FileSelectorPresenter", "Error saving file $fileName", e)
+            }
+        }
+    }
     @Composable
     override fun present(): FileSelectorState {
         val coroutineScope = rememberCoroutineScope()
-        var documents by remember { mutableStateOf<List<File>>(emptyList()) }
+        var documents by remember { mutableStateOf<List<MatrixFile>>(emptyList()) }
+        var downloadComplete by remember { mutableStateOf(false) }
         val filesPicker = mediaPickerProvider.registerFilePicker(Any) { uri ->
-           Log.d("FileSelectorPresenter", "Selected file: $uri")
+            Log.d("FileSelectorPresenter", "Selected file: $uri")
         }
 
         fun handleEvents(event: FileSelectorEvents) {
             when (event) {
-                is FileSelectorEvents.PickAttachmentSource.FromFiles -> {
-                    filesPicker.launch()
-                }
                 FileSelectorEvents.FetchFiles -> {
                     coroutineScope.launch {
                         try {
@@ -69,11 +93,34 @@ class FileSelectorPresenter @AssistedInject constructor(
                         }
                     }
                 }
+                is FileSelectorEvents.DownloadFiles -> {
+                    val filesToDownload = event.matrixFiles
+                    val userId = inputs.senderId.toString()
+
+                    coroutineScope.launch {
+                        filesToDownload.forEach { file ->
+                            try {
+                                downloadFile(file.mediaId, userId, file.name)
+                            } catch (e: Exception) {
+                                Timber.tag("FileSelectorPresenter").e(e, "Failed to download file: ${file.name}")
+                            }
+                        }
+                        downloadComplete = true
+                    }
+                }
+                FileSelectorEvents.ResetDownloadComplete -> {
+                    downloadComplete = false
+                }
+                FileSelectorEvents.UploadFiles -> {
+                    filesPicker.launch()
+                }
+                FileSelectorEvents.DeleteFiles -> TODO()
             }
         }
 
         return FileSelectorState(
             documents = documents,
+            downloadComplete = downloadComplete,
             eventSink = { handleEvents(it) },
         )
     }

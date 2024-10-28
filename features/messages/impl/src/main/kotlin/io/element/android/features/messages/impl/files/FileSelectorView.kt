@@ -68,7 +68,8 @@ fun FileSelectorView(
             if(selectedTab == "documents") {
                 FilesTable(
                     state = state,
-                    onUpload = {state.eventSink(FileSelectorEvents.PickAttachmentSource.FromFiles)}
+                    onDownload = {state.eventSink(FileSelectorEvents.DownloadFiles(it))},
+                    onUpload = {state.eventSink(FileSelectorEvents.UploadFiles)}
                 )
             }
         }

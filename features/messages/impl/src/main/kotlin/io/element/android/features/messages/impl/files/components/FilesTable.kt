@@ -25,6 +25,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -33,8 +34,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.element.android.features.messages.impl.files.File
+import io.element.android.compound.theme.ElementTheme
+import io.element.android.features.messages.impl.files.FileSelectorEvents
 import io.element.android.features.messages.impl.files.FileSelectorState
+import io.element.android.features.messages.impl.files.MatrixFile
 import io.element.android.libraries.designsystem.icons.ZebraIcons
 import io.element.android.libraries.designsystem.theme.components.Checkbox
 import java.text.SimpleDateFormat
@@ -45,16 +48,23 @@ import java.util.Locale
 @Composable
 fun FilesTable(
     state: FileSelectorState,
+    onDownload: (List<MatrixFile>) -> Unit,
     onUpload: () -> Unit,
 ) {
     val files = state.documents
     val scrollState = rememberScrollState()
-    val selectedFiles = remember { mutableStateListOf<File>() }
-    val allSelected = selectedFiles.size == files.size && files.isNotEmpty()
+    val selectedMatrixFiles = remember { mutableStateListOf<MatrixFile>() }
+    if (state.downloadComplete) {
+        selectedMatrixFiles.clear()
+        LaunchedEffect(Unit) {
+            state.eventSink(FileSelectorEvents.ResetDownloadComplete)
+        }
+    }
+    val allSelected = selectedMatrixFiles.size == files.size && files.isNotEmpty()
     val toggleSelectAll = { isSelected: Boolean ->
-        selectedFiles.clear()
+        selectedMatrixFiles.clear()
         if (isSelected) {
-            selectedFiles.addAll(files)
+            selectedMatrixFiles.addAll(files)
         }
     }
     val configuration = LocalConfiguration.current
@@ -77,8 +87,9 @@ fun FilesTable(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                onClick = { },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                onClick = { state.eventSink.invoke(FileSelectorEvents.DeleteFiles) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red, disabledContainerColor = Color.LightGray, disabledContentColor = ElementTheme.colors.iconDisabled),
+                enabled = selectedMatrixFiles.isNotEmpty(),
                 modifier = Modifier.weight(0.2f)
             ) {
                 Icon(ZebraIcons.DeleteIcon(), contentDescription = "Delete")
@@ -87,7 +98,11 @@ fun FilesTable(
                 modifier = Modifier.weight(0.8f),
                 horizontalArrangement = Arrangement.spacedBy(16.dp,Alignment.End)
             ) {
-                Button(onClick = { /* Download action */ }) {
+                Button(
+                    onClick = { onDownload(selectedMatrixFiles.toList()) },
+                    colors = ButtonDefaults.buttonColors(disabledContainerColor = Color.LightGray, disabledContentColor = ElementTheme.colors.iconDisabled),
+                    enabled = selectedMatrixFiles.isNotEmpty(),
+                ) {
                     Icon(ZebraIcons.DownloadIcon(), contentDescription = "Download")
                 }
 
@@ -118,32 +133,33 @@ fun FilesTable(
                 Text("File Size", fontWeight = FontWeight.Bold, modifier = Modifier.width(fileSizeWidth))
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            Column(modifier = Modifier.horizontalScroll(scrollState)) {
-                files.forEach { file ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = selectedFiles.contains(file),
-                            onCheckedChange = { isChecked ->
-                                if (isChecked) {
-                                    selectedFiles.add(file)
-                                } else {
-                                    selectedFiles.remove(file)
-                                }
-                            },
-                            modifier = Modifier.width(checkboxWidth).padding(end = 8.dp)
-                        )
-                        Text(file.name, modifier = Modifier.width(nameWidth))
-                        Text(file.sender, modifier = Modifier.width(senderWidth))
-                        Text(file.roomId ?: "N/A", modifier = Modifier.width(roomWidth))
-                        Text(formatDate(file.timestamp), modifier = Modifier.width(sharedOnWidth))
-                        Text(prettyFileSize(file.fileSize?.toLong() ?: 0), modifier = Modifier.width(fileSizeWidth))
+            if(files.isNotEmpty()) {
+                Column(modifier = Modifier.horizontalScroll(scrollState)) {
+                    files.forEach { file ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = selectedMatrixFiles.contains(file),
+                                onCheckedChange = { isChecked ->
+                                    if (isChecked) {
+                                        selectedMatrixFiles.add(file)
+                                    } else {
+                                        selectedMatrixFiles.remove(file)
+                                    }
+                                },
+                                modifier = Modifier.width(checkboxWidth).padding(end = 8.dp)
+                            )
+                            Text(file.name, modifier = Modifier.width(nameWidth))
+                            Text(file.sender, modifier = Modifier.width(senderWidth))
+                            Text(file.roomId ?: "N/A", modifier = Modifier.width(roomWidth))
+                            Text(formatDate(file.timestamp), modifier = Modifier.width(sharedOnWidth))
+                            Text(prettyFileSize(file.fileSize?.toLong() ?: 0), modifier = Modifier.width(fileSizeWidth))
+                        }
                     }
                 }
             }

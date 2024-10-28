@@ -9,7 +9,7 @@ package io.element.android.features.messages.impl.files
 
 import java.util.Date
 
-data class File(
+data class MatrixFile(
     val id: String? = null,
     val name: String,
     val downloadUrl: String,

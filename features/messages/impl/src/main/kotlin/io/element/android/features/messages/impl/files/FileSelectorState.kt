@@ -8,6 +8,7 @@
 package io.element.android.features.messages.impl.files
 
 data class FileSelectorState(
-    val documents: List<File>,
+    val documents: List<MatrixFile>,
+    val downloadComplete: Boolean,
     val eventSink: (FileSelectorEvents) -> Unit,
 )

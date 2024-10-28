@@ -11,8 +11,9 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 sealed interface FileSelectorEvents {
-    sealed interface PickAttachmentSource : FileSelectorEvents {
-        data object FromFiles : PickAttachmentSource
-    }
     data object FetchFiles : FileSelectorEvents
+    data class DownloadFiles(val matrixFiles: List<MatrixFile>) : FileSelectorEvents
+    data object UploadFiles : FileSelectorEvents
+    data object DeleteFiles : FileSelectorEvents
+    data object ResetDownloadComplete : FileSelectorEvents
 }
