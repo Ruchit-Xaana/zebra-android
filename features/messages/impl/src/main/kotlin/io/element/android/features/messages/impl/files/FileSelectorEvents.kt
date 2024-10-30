@@ -14,6 +14,6 @@ sealed interface FileSelectorEvents {
     data object FetchFiles : FileSelectorEvents
     data class DownloadFiles(val matrixFiles: List<MatrixFile>) : FileSelectorEvents
     data object UploadFiles : FileSelectorEvents
-    data object DeleteFiles : FileSelectorEvents
-    data object ResetDownloadComplete : FileSelectorEvents
+    data class DeleteFiles(val matrixFiles: List<MatrixFile>) : FileSelectorEvents
+    data object ResetSelection : FileSelectorEvents
 }

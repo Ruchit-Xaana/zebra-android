@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -48,16 +49,18 @@ import java.util.Locale
 @Composable
 fun FilesTable(
     state: FileSelectorState,
+    onDelete: (List<MatrixFile>) -> Unit,
     onDownload: (List<MatrixFile>) -> Unit,
     onUpload: () -> Unit,
 ) {
     val files = state.documents
     val scrollState = rememberScrollState()
     val selectedMatrixFiles = remember { mutableStateListOf<MatrixFile>() }
-    if (state.downloadComplete) {
+    if (state.completedFileOp) {
         selectedMatrixFiles.clear()
         LaunchedEffect(Unit) {
-            state.eventSink(FileSelectorEvents.ResetDownloadComplete)
+            state.eventSink(FileSelectorEvents.ResetSelection)
+            state.eventSink(FileSelectorEvents.FetchFiles)
         }
     }
     val allSelected = selectedMatrixFiles.size == files.size && files.isNotEmpty()
@@ -87,7 +90,7 @@ fun FilesTable(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                onClick = { state.eventSink.invoke(FileSelectorEvents.DeleteFiles) },
+                onClick = { onDelete(selectedMatrixFiles.toList()) },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red, disabledContainerColor = Color.LightGray, disabledContentColor = ElementTheme.colors.iconDisabled),
                 enabled = selectedMatrixFiles.isNotEmpty(),
                 modifier = Modifier.weight(0.2f)
@@ -96,6 +99,7 @@ fun FilesTable(
             }
             Row(
                 modifier = Modifier.weight(0.8f),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp,Alignment.End)
             ) {
                 Button(
@@ -105,9 +109,17 @@ fun FilesTable(
                 ) {
                     Icon(ZebraIcons.DownloadIcon(), contentDescription = "Download")
                 }
-
-                Button(onClick = onUpload) {
-                    Icon(ZebraIcons.UploadIcon(), contentDescription = "Upload")
+                if(state.isBusy) {
+                    CircularProgressIndicator(
+                        progress = { state.progress / 3f },
+                        color = Color.Green,
+                        trackColor = Color.LightGray
+                    )
+                }
+                else {
+                    Button(onClick = onUpload) {
+                        Icon(ZebraIcons.UploadIcon(), contentDescription = "Upload")
+                    }
                 }
             }
         }

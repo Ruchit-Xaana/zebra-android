@@ -7,7 +7,6 @@
 
 package io.element.android.features.messages.impl.files
 
-import android.util.Log
 import io.element.android.appconfig.AuthenticationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,19 +14,120 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import org.json.JSONArray
 import org.json.JSONObject
+import timber.log.Timber
+import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Base64
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 class FileOpsHandler @Inject constructor() {
     private val client: OkHttpClient = OkHttpClient()
     private val reportsApiUrl: String = AuthenticationConfig.REPORTS_API_URL
+    private val webSocketReportsApiUrl: String = AuthenticationConfig.WEBSOCKET_REPORTS_API_URL
+
+    /**
+     * Function to generate a random primary key
+     */
+    @Suppress("SameParameterValue")
+    private fun generatePrimaryKey(length: Int): String {
+        val characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        return (1..length)
+            .map { characters.random() }
+            .joinToString("")
+    }
+
+    /**
+     * Helper function to encode ByteArray to Base64
+     */
+    private fun ByteArray.encodeToBase64(): String = Base64.getEncoder().encodeToString(this)
+
+    /**
+     * WebSocket file upload method
+     */
+    suspend fun uploadFilesWebSocket(
+        userId: String,
+        files: List<File>,
+        onProgressUpdate: (Int) -> Unit,
+        onSetBusy: (Boolean) -> Unit,
+        onError: (String) -> Unit,
+        onCompleted: () -> Unit
+    ) = withContext(Dispatchers.IO) {
+        val completedConnections = AtomicInteger(0)
+        val progressArray = IntArray(files.size) { 0 }
+
+        files.forEachIndexed { index, file ->
+            val apiUrl = "$webSocketReportsApiUrl/pdf_upload"
+            val request = Request.Builder().url(apiUrl).build()
+            val mxcUrl = generatePrimaryKey(18)
+
+            client.newWebSocket(request, object : WebSocketListener() {
+                override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                    onSetBusy(true)
+                    val fileMetadata = JSONObject().apply {
+                        put("media_id", mxcUrl)
+                        put("room_id", null)
+                        put("event_id", null)
+                        put("user_id", userId)
+                        put("sender_id", userId)
+                        put("media_type", file.extension)
+                    }
+                    webSocket.send(fileMetadata.toString())
+
+                    val encodedContent = file.readBytes().encodeToBase64()
+
+                    val filePayload = JSONObject().apply {
+                        put("filename", JSONArray().put(file.name))
+                        put("content", JSONArray().put(encodedContent))
+                    }
+                    webSocket.send(filePayload.toString())
+                }
+
+                override fun onMessage(webSocket: WebSocket, text: String) {
+                    Timber.tag("FileSelectorPresenter").i("Received message: %s", text)
+                    if (text.startsWith("success")) {
+                        progressArray[index] += 1
+                        onProgressUpdate(progressArray.minOrNull() ?: 0)
+                        if (progressArray[index] == 3) {
+                            completedConnections.incrementAndGet()
+                            if (completedConnections.get() == files.size) {
+                                onSetBusy(false)
+                            }
+                        }
+                    } else if (text.startsWith("fail")) {
+                        onError("Upload failed for file: ${file.name} with message: $text")
+                        completedConnections.incrementAndGet()
+                        if (completedConnections.get() == files.size) onSetBusy(false)
+                    }
+                }
+
+                override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                    webSocket.close(code, reason)
+                }
+
+                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                    Timber.tag("FileSelectorPresenter").d("WebSocket closed with code: $code, reason: $reason")
+                    onCompleted()
+                }
+
+
+                override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {
+                    onError("WebSocket error for file ${file.name}: ${t.message} with response ${response?.body?.string()}, ${response?.code}")
+                    completedConnections.incrementAndGet()
+                    if (completedConnections.get() == files.size) onSetBusy(false)
+                }
+            })
+        }
+    }
+
     suspend fun listFiles(userId: String, type: String? = null, uploadService: String? = "zebra"): List<FileDTO> =
         withContext(Dispatchers.IO) {
             val payload = JSONObject().apply {
@@ -42,12 +142,10 @@ class FileOpsHandler @Inject constructor() {
                 .build()
 
             client.newCall(request).execute().use { response ->
-                Log.d("FileOpsHandler", "Response: ${response.code}")
                 if (!response.isSuccessful) return@withContext emptyList()
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                 dateFormat.timeZone = TimeZone.getTimeZone("GMT")
                 val data = response.body?.string().let { body ->
-                    Log.d("FileOpsHandler", "ResponseBody: ${body}")
                     val jsonArray = JSONArray(body)
                     List(jsonArray.length()) { i ->
                         val item = jsonArray.getJSONObject(i)
@@ -126,7 +224,7 @@ class FileOpsHandler @Inject constructor() {
                 .build()
 
             client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) throw IOException("Failed to delete file")
+                if (!response.isSuccessful) throw IOException("Failed to delete file with code ${response.code}")
                 JSONObject(response.body?.string() ?: "")
             }
         }
