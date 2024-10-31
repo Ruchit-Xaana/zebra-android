@@ -103,6 +103,13 @@ val SemanticColors.customScrimColor
         Color(0xFF000000)
     }
 
+val SemanticColors.floatingActionDoneColor
+    get() = if (isLight) {
+        Color(0xFF2E7D32)
+    } else {
+        Color(0xFF66BB6A)
+    }
+
 // This color is not present in Semantic color, so put hard-coded value for now
 val SemanticColors.progressIndicatorTrackColor
     get() = if (isLight) {

@@ -45,6 +45,7 @@ fun aMessageComposerState(
     canCreatePoll = canCreatePoll,
     attachmentsState = attachmentsState,
     suggestions = suggestions,
+    selectedFiles = persistentListOf(),
     resolveMentionDisplay = { _, _ -> TextDisplay.Plain },
     eventSink = {},
 )

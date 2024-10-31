@@ -10,9 +10,13 @@ package io.element.android.features.messages.impl.messagecomposer
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -95,30 +99,46 @@ internal fun MessageComposerView(
         voiceMessageState.eventSink(VoiceMessageComposerEvents.PlayerEvent(event))
     }
 
-    TextComposer(
-        modifier = modifier,
-        state = state.textEditorState,
-        voiceMessageState = voiceMessageState.voiceMessageState,
-        subcomposing = subcomposing,
-        onRequestFocus = ::onRequestFocus,
-        onSendMessage = ::sendMessage,
-        onFetchMessages = onFetchMessages,
-        composerMode = state.mode,
-        showTextFormatting = state.showTextFormatting,
-        onResetComposerMode = ::onCloseSpecialMode,
-        onAddAttachment = ::onAddAttachment,
-        onDismissTextFormatting = ::onDismissTextFormatting,
-        enableVoiceMessages = enableVoiceMessages,
-        onVoiceRecorderEvent = onVoiceRecorderEvent,
-        onVoicePlayerEvent = onVoicePlayerEvent,
-        onSendVoiceMessage = onSendVoiceMessage,
-        onDeleteVoiceMessage = onDeleteVoiceMessage,
-        onReceiveSuggestion = ::onSuggestionReceived,
-        resolveMentionDisplay = state.resolveMentionDisplay,
-        onError = ::onError,
-        onTyping = ::onTyping,
-        onSelectRichContent = ::sendUri,
-    )
+    Column(modifier = modifier) {
+        if(state.selectedFiles.isNotEmpty()) {
+            Column {
+                for (file in state.selectedFiles) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 1.dp,start = 6.dp, end = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        FilesPill(file = file, onRemoveFile = {state.eventSink(MessageComposerEvents.RemoveFile(it))})
+                    }
+                }
+            }
+        }
+        TextComposer(
+            modifier = modifier,
+            state = state.textEditorState,
+            voiceMessageState = voiceMessageState.voiceMessageState,
+            subcomposing = subcomposing,
+            onRequestFocus = ::onRequestFocus,
+            onSendMessage = ::sendMessage,
+            onFetchMessages = onFetchMessages,
+            composerMode = state.mode,
+            showTextFormatting = state.showTextFormatting,
+            onResetComposerMode = ::onCloseSpecialMode,
+            onAddAttachment = ::onAddAttachment,
+            onDismissTextFormatting = ::onDismissTextFormatting,
+            enableVoiceMessages = enableVoiceMessages,
+            onVoiceRecorderEvent = onVoiceRecorderEvent,
+            onVoicePlayerEvent = onVoicePlayerEvent,
+            onSendVoiceMessage = onSendVoiceMessage,
+            onDeleteVoiceMessage = onDeleteVoiceMessage,
+            onReceiveSuggestion = ::onSuggestionReceived,
+            resolveMentionDisplay = state.resolveMentionDisplay,
+            onError = ::onError,
+            onTyping = ::onTyping,
+            onSelectRichContent = ::sendUri,
+        )
+    }
 }
 
 @PreviewsDayNight

@@ -31,6 +31,8 @@ import im.vector.app.features.analytics.plan.Interaction
 import io.element.android.features.messages.impl.attachments.Attachment
 import io.element.android.features.messages.impl.attachments.preview.error.sendAttachmentError
 import io.element.android.features.messages.impl.draft.ComposerDraftService
+import io.element.android.features.messages.impl.files.FileSelectionCache
+import io.element.android.features.messages.impl.files.MatrixFile
 import io.element.android.features.messages.impl.messagecomposer.suggestions.SuggestionsProcessor
 import io.element.android.features.messages.impl.timeline.TimelineController
 import io.element.android.features.messages.impl.utils.TextPillificationHelper
@@ -122,6 +124,7 @@ class MessageComposerPresenter @Inject constructor(
     private val roomMemberProfilesCache: RoomMemberProfilesCache,
     private val suggestionsProcessor: SuggestionsProcessor,
     private val audioRecorder: DefaultAudioRecorder,
+    private val fileSelectionCache: FileSelectionCache,
 ) : Presenter<MessageComposerState> {
     private val cameraPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.CAMERA)
     private val micPermissionPresenter = permissionsPresenterFactory.create(Manifest.permission.RECORD_AUDIO)
@@ -193,6 +196,12 @@ class MessageComposerPresenter @Inject constructor(
         val sendTypingNotifications by sessionPreferencesStore.isSendTypingNotificationsEnabled().collectAsState(initial = true)
 
         val roomAliasSuggestions by roomAliasSuggestionsDataSource.getAllRoomAliasSuggestions().collectAsState(initial = emptyList())
+
+        var selectedFiles by remember { mutableStateOf<List<MatrixFile>>(emptyList()) }
+
+        LaunchedEffect(Unit) {
+            selectedFiles = fileSelectionCache.selectedFiles
+        }
 
         LaunchedEffect(attachmentsState.value) {
             when (val attachmentStateValue = attachmentsState.value) {
@@ -452,6 +461,10 @@ class MessageComposerPresenter @Inject constructor(
                 is MessageComposerEvents.SetComposerText -> {
                     markdownTextEditorState.text.update(event.prompt, true)
                 }
+                is MessageComposerEvents.RemoveFile -> {
+                    fileSelectionCache.removeFile(event.mediaId)
+                    selectedFiles = fileSelectionCache.selectedFiles
+                }
             }
         }
 
@@ -482,6 +495,7 @@ class MessageComposerPresenter @Inject constructor(
             canCreatePoll = canCreatePoll.value,
             attachmentsState = attachmentsState.value,
             suggestions = suggestions.toPersistentList(),
+            selectedFiles = selectedFiles,
             resolveMentionDisplay = resolveMentionDisplay,
             eventSink = { handleEvents(it) },
         )

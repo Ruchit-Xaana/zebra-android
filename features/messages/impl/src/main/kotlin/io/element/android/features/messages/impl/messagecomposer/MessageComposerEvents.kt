@@ -47,4 +47,5 @@ sealed interface MessageComposerEvents {
     }
     data object Forms : MessageComposerEvents
     data object FileSelector : MessageComposerEvents
+    data class RemoveFile(val mediaId: String) : MessageComposerEvents
 }

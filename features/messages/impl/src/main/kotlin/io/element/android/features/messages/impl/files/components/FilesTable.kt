@@ -10,6 +10,7 @@ package io.element.android.features.messages.impl.files.components
 import android.annotation.SuppressLint
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,10 +19,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -41,6 +45,7 @@ import io.element.android.features.messages.impl.files.FileSelectorState
 import io.element.android.features.messages.impl.files.MatrixFile
 import io.element.android.libraries.designsystem.icons.ZebraIcons
 import io.element.android.libraries.designsystem.theme.components.Checkbox
+import io.element.android.libraries.designsystem.theme.floatingActionDoneColor
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -50,6 +55,7 @@ import java.util.Locale
 fun FilesTable(
     state: FileSelectorState,
     onDelete: (List<MatrixFile>) -> Unit,
+    onDone: (List<MatrixFile>) -> Unit,
     onDownload: (List<MatrixFile>) -> Unit,
     onUpload: () -> Unit,
 ) {
@@ -80,100 +86,117 @@ fun FilesTable(
     val roomWidth = screenWidth * 0.20f // 20% of screen width for room
     val sharedOnWidth = screenWidth * 0.35f // 15% of screen width for shared on
     val fileSizeWidth = screenWidth * 0.35f // 15% of screen width for file size
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Button(
-                onClick = { onDelete(selectedMatrixFiles.toList()) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red, disabledContainerColor = Color.LightGray, disabledContentColor = ElementTheme.colors.iconDisabled),
-                enabled = selectedMatrixFiles.isNotEmpty(),
-                modifier = Modifier.weight(0.2f)
-            ) {
-                Icon(ZebraIcons.DeleteIcon(), contentDescription = "Delete")
-            }
             Row(
-                modifier = Modifier.weight(0.8f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp,Alignment.End)
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
-                    onClick = { onDownload(selectedMatrixFiles.toList()) },
-                    colors = ButtonDefaults.buttonColors(disabledContainerColor = Color.LightGray, disabledContentColor = ElementTheme.colors.iconDisabled),
+                    onClick = { onDelete(selectedMatrixFiles.toList()) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        disabledContainerColor = Color.LightGray,
+                        disabledContentColor = ElementTheme.colors.iconDisabled
+                    ),
                     enabled = selectedMatrixFiles.isNotEmpty(),
+                    modifier = Modifier.weight(0.2f)
                 ) {
-                    Icon(ZebraIcons.DownloadIcon(), contentDescription = "Download")
+                    Icon(ZebraIcons.DeleteIcon(), contentDescription = "Delete")
                 }
-                if(state.isBusy) {
-                    CircularProgressIndicator(
-                        progress = { state.progress / 3f },
-                        color = Color.Green,
-                        trackColor = Color.LightGray
-                    )
+                Row(
+                    modifier = Modifier.weight(0.8f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End)
+                ) {
+                    Button(
+                        onClick = { onDownload(selectedMatrixFiles.toList()) },
+                        colors = ButtonDefaults.buttonColors(disabledContainerColor = Color.LightGray, disabledContentColor = ElementTheme.colors.iconDisabled),
+                        enabled = selectedMatrixFiles.isNotEmpty(),
+                    ) {
+                        Icon(ZebraIcons.DownloadIcon(), contentDescription = "Download")
+                    }
+                    if (state.isBusy) {
+                        CircularProgressIndicator(
+                            progress = { state.progress / 3f },
+                            color = Color.Green,
+                            trackColor = Color.LightGray
+                        )
+                    } else {
+                        Button(onClick = onUpload) {
+                            Icon(ZebraIcons.UploadIcon(), contentDescription = "Upload")
+                        }
+                    }
                 }
-                else {
-                    Button(onClick = onUpload) {
-                        Icon(ZebraIcons.UploadIcon(), contentDescription = "Upload")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .horizontalScroll(scrollState),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = allSelected,
+                            onCheckedChange = { isChecked -> toggleSelectAll(isChecked) },
+                            modifier = Modifier.width(checkboxWidth).padding(end = 8.dp)
+                        )
+                        Text("Name", fontWeight = FontWeight.Bold, modifier = Modifier.width(nameWidth))
+                        Text("Sender", fontWeight = FontWeight.Bold, modifier = Modifier.width(senderWidth))
+                        Text("Room", fontWeight = FontWeight.Bold, modifier = Modifier.width(roomWidth))
+                        Text("Shared On", fontWeight = FontWeight.Bold, modifier = Modifier.width(sharedOnWidth))
+                        Text("File Size", fontWeight = FontWeight.Bold, modifier = Modifier.width(fileSizeWidth))
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+                items(files){ file ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .horizontalScroll(scrollState),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = selectedMatrixFiles.contains(file),
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    selectedMatrixFiles.add(file)
+                                } else {
+                                    selectedMatrixFiles.remove(file)
+                                }
+                            },
+                            modifier = Modifier.width(checkboxWidth).padding(end = 8.dp)
+                        )
+                        Text(file.name, modifier = Modifier.width(nameWidth))
+                        Text(file.sender, modifier = Modifier.width(senderWidth))
+                        Text(file.roomId ?: "N/A", modifier = Modifier.width(roomWidth))
+                        Text(formatDate(file.timestamp), modifier = Modifier.width(sharedOnWidth))
+                        Text(prettyFileSize(file.fileSize?.toLong() ?: 0), modifier = Modifier.width(fileSizeWidth))
                     }
                 }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
+        if(selectedMatrixFiles.isNotEmpty()) {
+            FloatingActionButton(
+                onClick = {onDone(selectedMatrixFiles.toList())},
+                containerColor = ElementTheme.colors.floatingActionDoneColor,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .horizontalScroll(scrollState),
-                    horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
+                    .align(Alignment.BottomEnd)
+                    .padding(start = 16.dp, top = 16.dp, bottom = 50.dp, end = 30.dp)
             ) {
-                Checkbox(
-                    checked = allSelected,
-                    onCheckedChange = { isChecked -> toggleSelectAll(isChecked) },
-                    modifier = Modifier.width(checkboxWidth).padding(end = 8.dp)
-                )
-                Text("Name", fontWeight = FontWeight.Bold, modifier = Modifier.width(nameWidth))
-                Text("Sender", fontWeight = FontWeight.Bold, modifier = Modifier.width(senderWidth))
-                Text("Room", fontWeight = FontWeight.Bold, modifier = Modifier.width(roomWidth))
-                Text("Shared On", fontWeight = FontWeight.Bold, modifier = Modifier.width(sharedOnWidth))
-                Text("File Size", fontWeight = FontWeight.Bold, modifier = Modifier.width(fileSizeWidth))
-            }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            if(files.isNotEmpty()) {
-                Column(modifier = Modifier.horizontalScroll(scrollState)) {
-                    files.forEach { file ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = selectedMatrixFiles.contains(file),
-                                onCheckedChange = { isChecked ->
-                                    if (isChecked) {
-                                        selectedMatrixFiles.add(file)
-                                    } else {
-                                        selectedMatrixFiles.remove(file)
-                                    }
-                                },
-                                modifier = Modifier.width(checkboxWidth).padding(end = 8.dp)
-                            )
-                            Text(file.name, modifier = Modifier.width(nameWidth))
-                            Text(file.sender, modifier = Modifier.width(senderWidth))
-                            Text(file.roomId ?: "N/A", modifier = Modifier.width(roomWidth))
-                            Text(formatDate(file.timestamp), modifier = Modifier.width(sharedOnWidth))
-                            Text(prettyFileSize(file.fileSize?.toLong() ?: 0), modifier = Modifier.width(fileSizeWidth))
-                        }
-                    }
-                }
+                Icon(ZebraIcons.DoneIcon(), contentDescription = "Done")
             }
         }
     }

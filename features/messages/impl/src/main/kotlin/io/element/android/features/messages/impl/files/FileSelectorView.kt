@@ -40,6 +40,11 @@ fun FileSelectorView(
     LaunchedEffect(Unit) {
         state.eventSink.invoke(FileSelectorEvents.FetchFiles)
     }
+    LaunchedEffect(state.exit) {
+        if (state.exit) {
+            onBackClick()
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -69,6 +74,7 @@ fun FileSelectorView(
                 FilesTable(
                     state = state,
                     onDelete = {state.eventSink(FileSelectorEvents.DeleteFiles(it))},
+                    onDone = {state.eventSink(FileSelectorEvents.SendFilesSelected(it))},
                     onDownload = {state.eventSink(FileSelectorEvents.DownloadFiles(it))},
                     onUpload = {state.eventSink(FileSelectorEvents.UploadFiles)}
                 )

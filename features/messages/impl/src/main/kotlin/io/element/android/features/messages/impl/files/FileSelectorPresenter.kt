@@ -44,6 +44,7 @@ class FileSelectorPresenter @AssistedInject constructor(
     private val mediaPickerProvider: PickerProvider,
     private val fileOpsHandler: FileOpsHandler,
     private val snackbarDispatcher: SnackbarDispatcher,
+    private val fileSelectionCache: FileSelectionCache,
 ) : Presenter<FileSelectorState> {
     data class Inputs(
         val senderId: UserId,
@@ -60,6 +61,7 @@ class FileSelectorPresenter @AssistedInject constructor(
         var documents by remember { mutableStateOf<List<MatrixFile>>(emptyList()) }
         var completedFileOp by remember { mutableStateOf(false) }
         var isBusy by remember { mutableStateOf(false) }
+        var exit by remember { mutableStateOf(false) }
         var progressInt by remember { mutableIntStateOf(0) }
         val filesPicker = mediaPickerProvider.registerFilePicker(Any){ uri ->
             if (uri == null) return@registerFilePicker
@@ -132,6 +134,10 @@ class FileSelectorPresenter @AssistedInject constructor(
                 FileSelectorEvents.UploadFiles -> {
                     filesPicker.launch()
                 }
+                is FileSelectorEvents.SendFilesSelected -> {
+                    fileSelectionCache.selectedFiles(event.matrixFiles)
+                    exit=true
+                }
             }
         }
 
@@ -139,6 +145,7 @@ class FileSelectorPresenter @AssistedInject constructor(
             documents = documents,
             completedFileOp = completedFileOp,
             isBusy = isBusy,
+            exit = exit,
             progress = progressInt,
             eventSink = { handleEvents(it) },
         )

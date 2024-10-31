@@ -9,6 +9,9 @@ package io.element.android.libraries.designsystem.icons
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
@@ -50,6 +53,15 @@ object ZebraIcons {
     @Composable fun DeleteIcon(): ImageVector {
         return Icons.Default.Delete
     }
+    @Composable fun DoneIcon(): ImageVector {
+        return Icons.AutoMirrored.Filled.Send
+    }
+    @Composable fun CloseIcon(): ImageVector {
+        return Icons.Filled.Close
+    }
+    @Composable fun AttachmentIcon(): ImageVector {
+        return Icons.Filled.AttachFile
+    }
 
     val all @Composable get() = persistentListOf(
         AudioCapture(),
@@ -61,6 +73,9 @@ object ZebraIcons {
         UploadIcon(),
         DownloadIcon(),
         DeleteIcon(),
+        DoneIcon(),
+        CloseIcon(),
+        AttachmentIcon(),
     )
 
     val allResIds get() = persistentListOf(

@@ -11,6 +11,7 @@ data class FileSelectorState(
     val documents: List<MatrixFile>,
     val completedFileOp: Boolean,
     val isBusy: Boolean,
+    val exit: Boolean,
     val progress: Int,
     val eventSink: (FileSelectorEvents) -> Unit,
 )
