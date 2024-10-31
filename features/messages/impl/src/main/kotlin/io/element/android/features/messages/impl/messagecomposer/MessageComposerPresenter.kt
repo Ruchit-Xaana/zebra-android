@@ -10,6 +10,7 @@ package io.element.android.features.messages.impl.messagecomposer
 import android.Manifest
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -203,6 +204,14 @@ class MessageComposerPresenter @Inject constructor(
             selectedFiles = fileSelectionCache.selectedFiles
         }
 
+        LaunchedEffect(selectedFiles) {
+            if (selectedFiles.isNotEmpty()) {
+                localCoroutineScope.setMode(MessageComposerMode.FileQuery, markdownTextEditorState, richTextEditorState)
+            } else {
+                resetComposer(markdownTextEditorState, richTextEditorState, fromEdit = false)
+            }
+        }
+
         LaunchedEffect(attachmentsState.value) {
             when (val attachmentStateValue = attachmentsState.value) {
                 is AttachmentsState.Sending.Processing -> {
@@ -296,10 +305,20 @@ class MessageComposerPresenter @Inject constructor(
                     }
                 }
                 is MessageComposerEvents.SendMessage -> {
-                    appCoroutineScope.sendMessage(
-                        markdownTextEditorState = markdownTextEditorState,
-                        richTextEditorState = richTextEditorState,
-                    )
+                    if (messageComposerContext.composerMode is MessageComposerMode.FileQuery) {
+                        appCoroutineScope.sendMessage(
+                            markdownTextEditorState = markdownTextEditorState,
+                            richTextEditorState = richTextEditorState,
+                            selectedFiles = selectedFiles
+                        )
+                        fileSelectionCache.clear()
+                        selectedFiles = emptyList()
+                    } else {
+                        appCoroutineScope.sendMessage(
+                            markdownTextEditorState = markdownTextEditorState,
+                            richTextEditorState = richTextEditorState,
+                        )
+                    }
                 }
                 is MessageComposerEvents.SendUri -> appCoroutineScope.sendAttachment(
                     attachment = Attachment.Media(
@@ -504,6 +523,7 @@ class MessageComposerPresenter @Inject constructor(
     private fun CoroutineScope.sendMessage(
         markdownTextEditorState: MarkdownTextEditorState,
         richTextEditorState: RichTextEditorState,
+        selectedFiles: List<MatrixFile> = emptyList()
     ) = launch {
         val message = currentComposerMessage(markdownTextEditorState, richTextEditorState, withMentions = true)
         val capturedMode = messageComposerContext.composerMode
@@ -515,6 +535,11 @@ class MessageComposerPresenter @Inject constructor(
                 htmlBody = message.html,
                 intentionalMentions = message.intentionalMentions
             )
+
+            is MessageComposerMode.FileQuery -> {
+                Log.d("MessageComposer", "Sending filequery with body: ${message.markdown}, html: ${message.html}, intentions: ${message.intentionalMentions} and files: $selectedFiles")
+            }
+
             is MessageComposerMode.Edit -> {
                 val eventId = capturedMode.eventId
                 val transactionId = capturedMode.transactionId
@@ -710,6 +735,7 @@ class MessageComposerPresenter @Inject constructor(
         val message = currentComposerMessage(markdownTextEditorState, richTextEditorState, withMentions = false)
         val draftType = when (val mode = messageComposerContext.composerMode) {
             is MessageComposerMode.Normal -> ComposerDraftType.NewMessage
+            is MessageComposerMode.FileQuery -> ComposerDraftType.NewMessage
             is MessageComposerMode.Edit -> {
                 mode.eventId?.let { eventId -> ComposerDraftType.Edit(eventId) }
             }

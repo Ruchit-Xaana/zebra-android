@@ -17,6 +17,7 @@ import io.element.android.libraries.matrix.ui.messages.reply.eventId
 @Immutable
 sealed interface MessageComposerMode {
     data object Normal : MessageComposerMode
+    data object FileQuery: MessageComposerMode
 
     sealed interface Special : MessageComposerMode
 
@@ -35,6 +36,7 @@ sealed interface MessageComposerMode {
     val relatedEventId: EventId?
         get() = when (this) {
             is Normal -> null
+            is FileQuery -> null
             is Edit -> eventId
             is Reply -> eventId
         }

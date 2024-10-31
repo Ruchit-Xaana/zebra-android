@@ -136,10 +136,15 @@ fun TextComposer(
         }
     }
 
-    val placeholder = if (composerMode.inThread) {
-        stringResource(id = CommonStrings.action_reply_in_thread)
-    } else {
-        stringResource(id = R.string.rich_text_editor_composer_placeholder)
+    val placeholder = if(composerMode is MessageComposerMode.FileQuery) {
+        stringResource(id = R.string.rich_text_editor_composer_file_query_placeholder)
+    }
+    else {
+        if (composerMode.inThread) {
+            stringResource(id = CommonStrings.action_reply_in_thread)
+        } else {
+            stringResource(id = R.string.rich_text_editor_composer_placeholder)
+        }
     }
     val textInput: @Composable () -> Unit = when (state) {
         is TextEditorState.Rich -> {
