@@ -95,6 +95,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
@@ -538,6 +540,37 @@ class MessageComposerPresenter @Inject constructor(
 
             is MessageComposerMode.FileQuery -> {
                 Log.d("MessageComposer", "Sending filequery with body: ${message.markdown}, html: ${message.html}, intentions: ${message.intentionalMentions} and files: $selectedFiles")
+                val fileSelectedList = selectedFiles.map { file ->
+                    JSONObject().apply {
+                        put("mediaId", file.mediaId)
+                        put("name", file.name)
+                        if (file.event != null && file.event != "null") {
+                            put("eventId", file.event)
+                        }
+                        if (file.roomId != null && file.roomId != "None") {
+                            put("roomId", file.roomId)
+                        }
+                    }
+                }
+                val model = "Zebra LLM"
+
+                val customKeys = JSONObject().apply {
+                    put("fileSelected", JSONArray(fileSelectedList))
+                    put("model", model)
+                }
+
+                val bodyJson = JSONObject().apply {
+                    put("message", message.markdown)
+                    put("custom_keys", customKeys)
+                }
+
+                val bodyString = bodyJson.toString()
+                Log.d("MessageComposer", "Sending bodyJson with body: $bodyString")
+                room.sendMessage(
+                    body = bodyString,
+                    htmlBody = "<p>${message.markdown}</p>",
+                    intentionalMentions = message.intentionalMentions,
+                )
             }
 
             is MessageComposerMode.Edit -> {

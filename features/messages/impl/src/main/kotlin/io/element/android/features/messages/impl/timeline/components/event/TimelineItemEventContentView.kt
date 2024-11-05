@@ -21,9 +21,11 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEncryptedContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEventContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileSearchQueryContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemImageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemLegacyCallInviteContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemLocationContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemPdfSearchContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemPollContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemRedactedContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemStateContent
@@ -36,6 +38,7 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemWebSearchContent
 import io.element.android.features.messages.impl.voicemessages.timeline.VoiceMessageState
 import io.element.android.libraries.architecture.Presenter
+import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 fun TimelineItemEventContentView(
@@ -126,6 +129,7 @@ fun TimelineItemEventContentView(
             onContentLayoutChange = onContentLayoutChange
         )
         is TimelineItemEmptyMessageContent -> {
+            if(content.contentInfo["type"]?.jsonPrimitive?.content=="web") {
                 return TimelineItemWebSearchResultView(
                     roomId = roomId,
                     eventId = eventId,
@@ -135,11 +139,35 @@ fun TimelineItemEventContentView(
                     onContentLayoutChange = onContentLayoutChange
                 )
             }
+            else{
+                return TimelineItemPdfSearchResultView(
+                    roomId = roomId,
+                    eventId = eventId,
+                    content = content,
+                    modifier = modifier,
+                    onLinkClick = onLinkClick,
+                    onContentLayoutChange = onContentLayoutChange
+                )
+            }
+        }
         is TimelineItemWebSearchContent -> TimelineItemWebSearchFinalView(
             content = content,
             modifier = modifier,
             onLinkClick = onLinkClick,
             onPromptClick = onPromptClick,
+            onContentLayoutChange = onContentLayoutChange
+        )
+        is TimelineItemPdfSearchContent -> TimelineItemPdfSearchFinalView(
+            content = content,
+            modifier = modifier,
+            onLinkClick = onLinkClick,
+            onPromptClick = onPromptClick,
+            onContentLayoutChange = onContentLayoutChange
+        )
+        is TimelineItemFileSearchQueryContent -> TimelineItemFileSearchQueryView(
+            content = content,
+            modifier = modifier,
+            onLinkClick = onLinkClick,
             onContentLayoutChange = onContentLayoutChange
         )
         is TimelineItemCallNotifyContent -> error("This shouldn't be rendered as the content of a bubble")

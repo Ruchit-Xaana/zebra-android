@@ -18,14 +18,17 @@ import androidx.core.text.util.LinkifyCompat
 import io.element.android.features.location.api.Location
 import io.element.android.features.messages.api.timeline.HtmlConverterProvider
 import io.element.android.features.messages.impl.timeline.components.event.widget.WeatherData
+import io.element.android.features.messages.impl.timeline.model.event.PdfSearchData
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemAudioContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmoteContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEventContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileSearchQueryContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemImageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemLocationContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemNoticeContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemPdfSearchContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemStickerContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemTextContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemVideoContent
@@ -63,7 +66,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.json.JSONException
+import org.json.JSONObject
 import org.jsoup.SerializationException
 import timber.log.Timber
 import javax.inject.Inject
@@ -216,13 +222,9 @@ class TimelineItemContentMessageFactory @Inject constructor(
             }
             is TextMessageType -> {
                 val body = messageType.body.trimEnd()
-                TimelineItemTextContent(
-                    body = body,
-                    pillifiedBody = textPillificationHelper.pillify(body),
-                    htmlDocument = messageType.formatted?.toHtmlDocument(permalinkParser = permalinkParser),
-                    formattedBody = parseHtml(messageType.formatted) ?: body.withLinks(),
-                    isEdited = content.isEdited,
-                )
+                val formatted = messageType.formatted
+                val isEdited = content.isEdited
+                return createTextContent(body, formatted, isEdited)
             }
             is OtherMessageType -> {
                 val body = messageType.body.trimEnd()
@@ -243,7 +245,7 @@ class TimelineItemContentMessageFactory @Inject constructor(
         val body=messageType.body
         if(resJson!=null){
             val resObject= Json.decodeFromString<JsonObject>(resJson)
-            val keysToCheck = listOf("weather","fetching")
+            val keysToCheck = listOf("weather","fetching","pdfResponse")
             when {
                 keysToCheck.any { (resObject["content"] as? JsonObject)?.containsKey(it) == true } -> {
                     val contentObject = resObject["content"] as JsonObject
@@ -272,6 +274,13 @@ class TimelineItemContentMessageFactory @Inject constructor(
                                 }
                             }
                         }
+                        "pdfResponse" -> {
+                            return TimelineItemPdfSearchContent(
+                                body = body,
+                                formattedBody = parseHtml(messageType.formatted) ?: body.withLinks(),
+                                additionalData = parsePdfSearchData(contentObject),
+                            )
+                        }
                     }
                 }
             }
@@ -283,6 +292,55 @@ class TimelineItemContentMessageFactory @Inject constructor(
             isEdited = content.isEdited,
         )
 
+    }
+
+    private fun createTextContent(body: String, formatted:FormattedBody? = null, isEdited: Boolean): TimelineItemEventContent {
+        Log.d("TextContent","$body and formattedbody: ${formatted?.body} and isEdited: $isEdited")
+        return try {
+            val jsonBody = JSONObject(body)
+            val message = jsonBody.getString("message")
+            val customKeys = jsonBody.optJSONObject("custom_keys")
+            val fileSelected = customKeys?.optJSONArray("fileSelected")
+
+            val fileNames = mutableListOf<String>()
+            if (fileSelected != null) {
+                for (i in 0 until fileSelected.length()) {
+                    val fileObject = fileSelected.getJSONObject(i)
+                    val fileName = fileObject.optString("name")
+                    if (fileName.isNotEmpty()) {
+                        fileNames.add(fileName)
+                    }
+                }
+            }
+
+            if (fileNames.isNotEmpty()) {
+                TimelineItemFileSearchQueryContent(
+                    body = message,
+                    fileNames = fileNames,
+                    pillifiedBody = textPillificationHelper.pillify(message),
+                    htmlDocument = formatted?.toHtmlDocument(permalinkParser = permalinkParser),
+                    formattedBody = parseHtml(formatted) ?: message.withLinks(),
+                    isEdited = isEdited
+                )
+            } else {
+                TimelineItemTextContent(
+                    body = body,
+                    pillifiedBody = textPillificationHelper.pillify(body),
+                    htmlDocument = formatted?.toHtmlDocument(permalinkParser = permalinkParser),
+                    formattedBody = parseHtml(formatted) ?: body.withLinks(),
+                    isEdited = isEdited
+                )
+            }
+        } catch (e: JSONException) {
+            Log.e("TextContent", "Failed to parse body as JSON", e)
+            TimelineItemTextContent(
+                body = body,
+                pillifiedBody = textPillificationHelper.pillify(body),
+                htmlDocument = formatted?.toHtmlDocument(permalinkParser = permalinkParser),
+                formattedBody = parseHtml(formatted) ?: body.withLinks(),
+                isEdited = isEdited
+            )
+        }
     }
 
     private fun parseWeatherData(data:String?): WeatherData? {
@@ -314,6 +372,24 @@ class TimelineItemContentMessageFactory @Inject constructor(
             val prompt = data["prompt"]?.jsonArray?.map { it.jsonPrimitive.content }
             val webSearchData = WebSearchData(raw_question = raw_question, sources = sources, prompt = prompt)
             return webSearchData
+        }
+        catch(e:Exception){
+            Timber.e("Error parsing web search response: ${e.message}")
+            return null
+        }
+    }
+
+    @Suppress("LocalVariableName")
+    private fun parsePdfSearchData(data: JsonObject): PdfSearchData? {
+        try{
+            val raw_question = data["raw_question"]?.jsonPrimitive?.content?:"null"
+            val fileNames = data["files_"]?.jsonArray?.mapNotNull {
+                it.jsonObject["name"]?.jsonPrimitive?.content
+            }
+            val web_url = data["web_url"]?.jsonArray?.map { it.jsonPrimitive.content }
+            val file_prompt = data["file_prompt"]?.jsonArray?.map { it.jsonPrimitive.content }
+            val pdfSearchData = PdfSearchData(raw_question = raw_question, file_names = fileNames, web_url = web_url, file_prompt = file_prompt)
+            return pdfSearchData
         }
         catch(e:Exception){
             Timber.e("Error parsing web search response: ${e.message}")

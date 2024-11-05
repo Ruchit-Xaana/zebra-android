@@ -15,9 +15,11 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEncryptedContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileSearchQueryContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemImageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemLegacyCallInviteContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemLocationContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemPdfSearchContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemPollContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemProfileChangeContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemRedactedContent
@@ -64,6 +66,8 @@ class DefaultMessageSummaryFormatter @Inject constructor(
             is TimelineItemCallNotifyContent -> context.getString(CommonStrings.common_call_started)
             is TimelineItemEmptyMessageContent -> event.content.body
             is TimelineItemWebSearchContent -> event.content.body
+            is TimelineItemFileSearchQueryContent -> "File Search Query Sent"
+            is TimelineItemPdfSearchContent -> event.content.body
         }.take(MAX_SAFE_LENGTH)
     }
 }

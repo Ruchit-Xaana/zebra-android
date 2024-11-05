@@ -13,9 +13,11 @@ import io.element.android.features.messages.impl.timeline.model.event.TimelineIt
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEmptyMessageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemEncryptedContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemFileSearchQueryContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemImageContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemLegacyCallInviteContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemLocationContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemPdfSearchContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemPollContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemProfileChangeContent
 import io.element.android.features.messages.impl.timeline.model.event.TimelineItemRedactedContent
@@ -51,9 +53,11 @@ import io.element.android.libraries.matrix.api.timeline.item.event.UnknownConten
 internal fun TimelineItem.Event.canBeGrouped(): Boolean {
     return when (content) {
         is TimelineItemTextBasedContent,
+        is TimelineItemFileSearchQueryContent,
         is TimelineItemWeatherContent,
         is TimelineItemEmptyMessageContent,
         is TimelineItemWebSearchContent,
+        is TimelineItemPdfSearchContent,
         is TimelineItemEncryptedContent,
         is TimelineItemImageContent,
         is TimelineItemStickerContent,
